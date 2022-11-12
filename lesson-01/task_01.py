@@ -2,9 +2,10 @@
 # Аргументом функции является список, в котором каждый сетевой узел должен быть представлен именем хоста или ip-адресом.
 # В функции необходимо перебирать ip-адреса и проверять их доступность с выводом соответствующего сообщения
 # («Узел доступен», «Узел недоступен»). При этом ip-адрес сетевого узла должен создаваться с помощью функции ip_address().
-import platform
 import socket
+import platform
 
+from threading import Thread
 from ipaddress import ip_address
 from subprocess import Popen, PIPE
 
