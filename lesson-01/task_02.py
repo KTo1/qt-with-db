@@ -13,11 +13,11 @@ def host_range_ping(address, count):
     if count > max_address:
         raise ValueError(f'Конечный адрес выходит за допустимый диапазон (max={max_address})!')
 
-    host_ping([start_address+i for i in range(max_address)])
+    return host_ping([start_address+i for i in range(max_address)])
 
 
 if __name__ == '__main__':
     address = input('Введите начальный адрес: ')
     count = int(input('Введите количество адресов для проверки: '))
 
-    host_range_ping(address, count)
+    print(host_range_ping(address, count))

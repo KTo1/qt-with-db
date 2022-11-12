@@ -8,4 +8,12 @@
 # Unreachable
 # 10.0.0.3
 # 10.0.0.4
+from task_02 import host_range_ping
+from tabulate import tabulate
 
+
+if __name__ == '__main__':
+    address = input('Введите начальный адрес: ')
+    count = int(input('Введите количество адресов для проверки: '))
+
+    print(tabulate(host_range_ping(address, count), headers='keys'))
