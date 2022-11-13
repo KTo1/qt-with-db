@@ -18,9 +18,11 @@ class Server:
     Класс сервер
     """
 
-    def __init__(self):
+    def __init__(self, listen_address, listen_port):
         self.__users_db = ['Guest', 'Bazil', 'KTo', 'User']
         self.__users_online_db = {}
+        self.__listen_address = listen_address
+        self.__listen_port = listen_port
 
     def process_client_message(self, message):
         """
@@ -139,31 +141,15 @@ class Server:
         Пример: server.py -p 8888 -a 127.0.0.1
         """
 
-        listen_address = parse_cmd_parameter('-a', sys.argv, DEFAULT_IP_ADDRESS, 'После параметра \'a\'- необходимо указать адрес, который будет слушать сервер.')
-        listen_port = parse_cmd_parameter('-p', sys.argv, DEFAULT_PORT, 'После параметра -\'p\' необходимо указать номер порта.')
-
-        if listen_port is None or listen_address is None:
-            server_log.error('Неверно заданы параметры командной строки')
-            sys.exit(1)
-
-        # process parameter
-        try:
-            listen_port = int(listen_port)
-            if listen_port < 1024 or listen_port > 65535:
-                raise ValueError
-        except ValueError:
-            server_log.exception('Номер порта может быть указано только в диапазоне от 1024 до 65535.')
-            sys.exit(1)
-
         transport = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         transport.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        transport.bind((listen_address, listen_port))
+        transport.bind((self.__listen_address, self.__listen_port))
 
         transport.listen(MAX_CONNECTIONS)
         transport.settimeout(1)
 
         clients_sockets = []
-        server_log.info(f'Сервер запущен по адресу: {listen_address}: {listen_port}')
+        server_log.info(f'Сервер запущен по адресу: {self.__listen_address}: {self.__listen_port}')
 
         while True:
             try:
@@ -225,5 +211,18 @@ class Server:
 
 
 if __name__ == '__main__':
-    server = Server()
+    listen_address = parse_cmd_parameter('-a', sys.argv, DEFAULT_IP_ADDRESS,
+                                         'После параметра \'a\'- необходимо указать адрес, который будет слушать сервер.')
+    listen_port = parse_cmd_parameter('-p', sys.argv, DEFAULT_PORT,
+                                      'После параметра -\'p\' необходимо указать номер порта.')
+
+    if listen_port is None or listen_address is None:
+        raise ValueError('Неверно заданы параметры командной строки')
+
+    # process parameter
+    listen_port = int(listen_port)
+    if listen_port < 1024 or listen_port > 65535:
+        raise ValueError('Номер порта может быть указано только в диапазоне от 1024 до 65535.')
+
+    server = Server(listen_address, listen_port)
     server.run()
