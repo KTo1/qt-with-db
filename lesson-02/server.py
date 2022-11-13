@@ -13,10 +13,29 @@ from logs.server_log_config import server_log
 from logs.decorators import log
 
 
+class PortField:
+
+    def __get__(self, instance, owner):
+        return instance.__dict__[self.my_attr]
+
+    def __set__(self, instance, value):
+        if value < 1024 or value > 65535:
+             raise ValueError(f'{self.my_attr} - может быть только в диапазоне от 1024 до 65535.')
+        instance.__dict__[self.my_attr] = value
+
+    def __delete__(self, instance):
+        del instance.__dict__[self.my_attr]
+
+    def __set_name__(self, owner, my_attr):
+        self.my_attr = my_attr
+
+
 class Server:
     """
     Класс сервер
     """
+
+    __listen_port = PortField()
 
     def __init__(self, listen_address, listen_port):
         self.__users_db = ['Guest', 'Bazil', 'KTo', 'User']
@@ -221,8 +240,6 @@ if __name__ == '__main__':
 
     # process parameter
     listen_port = int(listen_port)
-    if listen_port < 1024 or listen_port > 65535:
-        raise ValueError('Номер порта может быть указано только в диапазоне от 1024 до 65535.')
 
     server = Server(listen_address, listen_port)
     server.run()
