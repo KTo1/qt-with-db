@@ -52,6 +52,14 @@ class Server:
             ERROR: 'Bad Request'
         }
 
+    def create_common_message(self, response, user):
+        return {
+            RESPONSE: response,
+            TIME: time.time(),
+            USER: user,
+            MESSAGE: ''
+        }
+
     def create_presence_answer(self, response):
         """
         Генерирует ответ на приветствие
@@ -59,12 +67,10 @@ class Server:
         :return:
         """
 
-        return {
-            RESPONSE: 200,
-            TIME: time.time(),
-            USER: response[MESSAGE][USER][ACCOUNT_NAME],
-            MESSAGE: 'enter, and say hi all!'
-        }
+        message = self.create_common_message(200, response[MESSAGE][USER][ACCOUNT_NAME])
+        message[MESSAGE] = 'enter, and say hi all!'
+
+        return message
 
     def create_no_user_answer(self):
         """
@@ -73,12 +79,10 @@ class Server:
         :return:
         """
 
-        return {
-            RESPONSE: 201,
-            TIME: time.time(),
-            USER: USERNAME_SERVER,
-            MESSAGE: 'Пользователь не найден, возможно он не в сети, или вы ошиблись в имени.'
-        }
+        message = self.create_common_message(201, USERNAME_SERVER)
+        message[MESSAGE] = 'Пользователь не найден, возможно он не в сети, или вы ошиблись в имени.'
+
+        return message
 
     def create_user_online_answer(self):
         """
@@ -87,15 +91,14 @@ class Server:
         :return:
         """
 
-        message = 'Список пользователей онлайн: \n'
-        message += '\n'.join(['/' + user for user in self.__users_online_db])
+        message = self.create_common_message(203, USERNAME_SERVER)
 
-        return {
-            RESPONSE: 203,
-            TIME: time.time(),
-            USER: USERNAME_SERVER,
-            MESSAGE: message
-        }
+        message_text = 'Список пользователей онлайн: \n'
+        message_text += '\n'.join(['/' + user for user in self.__users_online_db])
+
+        message[MESSAGE] = message_text
+
+        return message
 
     def create_answer(self, response):
         """
@@ -104,12 +107,10 @@ class Server:
         :return:
         """
 
-        return {
-            RESPONSE: 201,
-            TIME: time.time(),
-            USER: response[MESSAGE][USER][ACCOUNT_NAME],
-            MESSAGE: response[MESSAGE][MESSAGE]
-        }
+        message = self.create_common_message(201, response[MESSAGE][USER][ACCOUNT_NAME])
+        message[MESSAGE] = response[MESSAGE][MESSAGE]
+
+        return message
 
     def create_exit_answer(self, response):
         """
@@ -118,12 +119,10 @@ class Server:
         :return:
         """
 
-        return {
-            RESPONSE: 202,
-            TIME: time.time(),
-            USER: response[MESSAGE][USER][ACCOUNT_NAME],
-            MESSAGE: 'exit and say by!'
-        }
+        message = self.create_common_message(202, response[MESSAGE][USER][ACCOUNT_NAME])
+        message[MESSAGE] = 'exit and say by!'
+
+        return message
 
     def register_user_online(self, user, socket):
         self.__users_online_db[user] = socket
