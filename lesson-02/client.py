@@ -6,7 +6,7 @@ import threading
 
 from common.variables import (DEFAULT_PORT, DEFAULT_IP_ADDRESS, ACTION, PRESENCE, TIME, USER,
                               ACCOUNT_NAME, RESPONSE, ERROR, DEFAULT_USER, MESSAGE, EXIT, TO_USERNAME, USERS_ONLINE)
-from common.utils import get_message, send_message, parse_cmd_parameter
+from common.utils import get_message, send_message, parse_cmd_parameter, PortField
 from logs.client_log_config import client_log
 from logs.decorators import log
 
@@ -15,6 +15,13 @@ class Client:
     """
     Класс клиент
     """
+
+    __server_port = PortField()
+
+    def __init__(self, server_address, server_port, user_name):
+        self.__server_address = server_address
+        self.__server_port = server_port
+        self.__user_name = user_name
 
     def create_common_message(self, account_name, action):
         result = {
@@ -92,6 +99,10 @@ class Client:
         raise ValueError
 
     def print_help(self):
+        """
+        Выводит справку
+        """
+
         help_string = 'Справка по командам:\n'
         help_string += '/help - эта справка\n'
         help_string += '/online - кто онлайн?\n'
@@ -101,6 +112,11 @@ class Client:
         print(help_string)
 
     def get_username_from_msg(self, command):
+        """
+        Извлекает имя пользователя из сообщений
+        :param command:
+        :return: Имя пользователя
+        """
         if not command or not isinstance(command, str):
             return None
 
@@ -109,6 +125,13 @@ class Client:
         return command.split()[0]
 
     def send_messages(self, transport, user_name):
+        """
+        Для потока записи сообщений
+        :param transport:
+        :param user_name:
+        :return:
+        """
+
         while True:
             msg = input(f'<{user_name}> Введите непустое сообщение (/help - помощь): ')
             if not msg:
@@ -134,6 +157,12 @@ class Client:
                 send_message(transport, self.create_message(msg.replace(to_username, ''), user_name, to_username))
 
     def recv_messages(self, transport):
+        """
+        Для потока чтения сообщений
+        :param transport:
+        :return:
+        """
+
         while True:
             answer = self.process_answer(get_message(transport))
             if answer:
@@ -150,31 +179,14 @@ class Client:
         Пример: client.py -u Guest -p 8888 -a 127.0.0.1
         """
 
-        server_address = parse_cmd_parameter('-a', sys.argv, DEFAULT_IP_ADDRESS, 'После параметра \'a\'- необходимо указать адрес, который будет слушать сервер.')
-        server_port = parse_cmd_parameter('-p', sys.argv, DEFAULT_PORT, 'После параметра -\'p\' необходимо указать номер порта.')
-        user_name = parse_cmd_parameter('-u', sys.argv, DEFAULT_USER, 'После параметра -\'u\' необходимо указать имя пользователя.')
-
-        if server_port is None or server_address is None:
-            client_log.error('Неверно заданы параметры командной строки')
-            sys.exit(1)
-
-        # process parameter
-        try:
-            server_port = int(server_port)
-            if server_port < 1024 or server_port > 65535:
-                raise ValueError
-        except ValueError:
-            client_log.exception('Номер порта может быть указано только в диапазоне от 1024 до 65535.')
-            sys.exit(1)
-
         transport = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
-            transport.connect((server_address, server_port))
+            transport.connect((self.__server_address, self.__server_port))
         except ConnectionRefusedError as e:
             client_log.exception(str(e))
             sys.exit(1)
 
-        message = self.create_presence(user_name)
+        message = self.create_presence(self.__user_name)
         send_message(transport, message)
 
         try:
@@ -188,7 +200,7 @@ class Client:
         if answer == '200':
             pass
 
-        sender = threading.Thread(target=self.send_messages, args=(transport, user_name))
+        sender = threading.Thread(target=self.send_messages, args=(transport, self.__user_name))
         receiver = threading.Thread(target=self.recv_messages, args=(transport,))
 
         sender.daemon = True
@@ -205,5 +217,19 @@ class Client:
 
 
 if __name__ == '__main__':
-    client = Client()
+
+    server_address = parse_cmd_parameter('-a', sys.argv, DEFAULT_IP_ADDRESS,
+                                         'После параметра \'a\'- необходимо указать адрес, который будет слушать сервер.')
+    server_port = parse_cmd_parameter('-p', sys.argv, DEFAULT_PORT,
+                                      'После параметра -\'p\' необходимо указать номер порта.')
+    user_name = parse_cmd_parameter('-u', sys.argv, DEFAULT_USER,
+                                    'После параметра -\'u\' необходимо указать имя пользователя.')
+
+    if server_port is None or server_address is None or user_name is None:
+        raise ValueError('Неверно заданы параметры командной строки')
+
+    # process parameter
+    server_port1 = int(server_port)
+
+    client = Client(server_address, server_port1, user_name)
     client.run()

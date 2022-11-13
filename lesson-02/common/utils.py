@@ -4,6 +4,23 @@ from common.variables import MAX_PACKAGE_LENGTH, ENCODING
 from logs.decorators import log, Log
 
 
+class PortField:
+
+    def __get__(self, instance, owner):
+        return instance.__dict__[self.my_attr]
+
+    def __set__(self, instance, value):
+        if value < 1024 or value > 65535:
+             raise ValueError(f'{self.my_attr} - может быть только в диапазоне от 1024 до 65535.')
+        instance.__dict__[self.my_attr] = value
+
+    def __delete__(self, instance):
+        del instance.__dict__[self.my_attr]
+
+    def __set_name__(self, owner, my_attr):
+        self.my_attr = my_attr
+
+
 @Log()
 def parse_cmd_parameter(parameter, sys_argv, default_value, error_message):
     try:

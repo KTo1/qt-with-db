@@ -8,26 +8,9 @@ from select import select
 from common.variables import (MAX_CONNECTIONS, RESPONSE, ERROR, TIME, USER, ACTION, ACCOUNT_NAME, PRESENCE,
                               DEFAULT_PORT, DEFAULT_IP_ADDRESS, MESSAGE, EXIT, TO_USERNAME, USERNAME_SERVER,
                               USERS_ONLINE)
-from common.utils import get_message, send_message, parse_cmd_parameter
+from common.utils import get_message, send_message, parse_cmd_parameter, PortField
 from logs.server_log_config import server_log
 from logs.decorators import log
-
-
-class PortField:
-
-    def __get__(self, instance, owner):
-        return instance.__dict__[self.my_attr]
-
-    def __set__(self, instance, value):
-        if value < 1024 or value > 65535:
-             raise ValueError(f'{self.my_attr} - может быть только в диапазоне от 1024 до 65535.')
-        instance.__dict__[self.my_attr] = value
-
-    def __delete__(self, instance):
-        del instance.__dict__[self.my_attr]
-
-    def __set_name__(self, owner, my_attr):
-        self.my_attr = my_attr
 
 
 class Server:
