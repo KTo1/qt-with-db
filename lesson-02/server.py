@@ -11,16 +11,10 @@ from common.variables import (MAX_CONNECTIONS, RESPONSE, ERROR, TIME, USER, ACTI
                               DEFAULT_PORT, DEFAULT_IP_ADDRESS, MESSAGE, EXIT, TO_USERNAME, USERNAME_SERVER,
                               USERS_ONLINE)
 from common.utils import get_message, send_message, parse_cmd_parameter, PortField
+from common.exceptions import CodeException
 from logs.server_log_config import server_log
 from logs.decorators import log
-
-
 from io import StringIO
-import sys
-
-
-class CodeException(BaseException):
-    pass
 
 
 class ServerVerifier(type):

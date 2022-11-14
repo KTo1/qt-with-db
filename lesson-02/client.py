@@ -1,3 +1,5 @@
+import re
+import dis
 import sys
 import json
 import time
@@ -7,11 +9,37 @@ import threading
 from common.variables import (DEFAULT_PORT, DEFAULT_IP_ADDRESS, ACTION, PRESENCE, TIME, USER,
                               ACCOUNT_NAME, RESPONSE, ERROR, DEFAULT_USER, MESSAGE, EXIT, TO_USERNAME, USERS_ONLINE)
 from common.utils import get_message, send_message, parse_cmd_parameter, PortField
+from common.exceptions import CodeException
 from logs.client_log_config import client_log
 from logs.decorators import log
+from io import StringIO
+
 
 class ClientVerifier(type):
-    pass
+
+    def __init__(self, *args, **kwargs):
+
+        super(ClientVerifier, self).__init__(*args, **kwargs)
+
+        re_tcp = r'.*LOAD_ATTR.*SOCK_STREAM.*'
+        re_accept = r'.*LOAD_METHOD.*accept.*'
+        re_listen = r'.*LOAD_METHOD.*listen.*'
+
+        old_stdout = sys.stdout
+        result = StringIO()
+        sys.stdout = result
+        dis.dis(self)
+        result_string = result.getvalue()
+        sys.stdout = old_stdout
+
+        if not re.search(re_tcp, result_string):
+            raise CodeException('Допустимы только TCP сокеты.')
+
+        if re.search(re_accept, result_string):
+            raise CodeException('Вызовы метода accept недопустимы.')
+
+        if re.search(re_listen, result_string):
+            raise CodeException('Вызовы метода listen недопустимы.')
 
 
 class Client(metaclass=ClientVerifier):
