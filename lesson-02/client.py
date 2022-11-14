@@ -10,8 +10,11 @@ from common.utils import get_message, send_message, parse_cmd_parameter, PortFie
 from logs.client_log_config import client_log
 from logs.decorators import log
 
+class ClientVerifier(type):
+    pass
 
-class Client:
+
+class Client(metaclass=ClientVerifier):
     """
     Класс клиент
     """

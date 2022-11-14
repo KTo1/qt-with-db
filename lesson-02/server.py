@@ -1,3 +1,5 @@
+import re
+import dis
 import sys
 import json
 import time
@@ -13,7 +15,38 @@ from logs.server_log_config import server_log
 from logs.decorators import log
 
 
-class Server:
+from io import StringIO
+import sys
+
+
+class CodeException(BaseException):
+    pass
+
+
+class ServerVerifier(type):
+
+    def __init__(self, *args, **kwargs):
+
+        super(ServerVerifier, self).__init__(*args, **kwargs)
+
+        re_tcp = r'.*LOAD_ATTR.*SOCK_STREAM.*'
+        re_connect = r'.*LOAD_METHOD.*connect.*'
+
+        old_stdout = sys.stdout
+        result = StringIO()
+        sys.stdout = result
+        dis.dis(self)
+        result_string = result.getvalue()
+        sys.stdout = old_stdout
+
+        if not re.search(re_tcp, result_string):
+            raise CodeException('Допустимы только TCP сокеты.')
+
+        if re.search(re_connect, result_string):
+            raise CodeException('Вызовы метода connect недопустимы.')
+
+
+class Server(metaclass=ServerVerifier):
     """
     Класс сервер
     """
