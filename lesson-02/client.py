@@ -21,6 +21,10 @@ class ClientVerifier(type):
 
         super(ClientVerifier, self).__init__(*args, **kwargs)
 
+        for attr, val in args[2].items():
+            if isinstance(val, socket.socket):
+                raise CodeException('Сокеты в атрибутах запрещены.')
+
         re_tcp = r'.*LOAD_ATTR.*SOCK_STREAM.*'
         re_accept = r'.*LOAD_METHOD.*accept.*'
         re_listen = r'.*LOAD_METHOD.*listen.*'
