@@ -10,11 +10,10 @@ from select import select
 from common.variables import (MAX_CONNECTIONS, RESPONSE, ERROR, TIME, USER, ACTION, ACCOUNT_NAME, PRESENCE,
                               DEFAULT_PORT, DEFAULT_IP_ADDRESS, MESSAGE, EXIT, TO_USERNAME, USERNAME_SERVER,
                               USERS_ONLINE)
-from common.utils import get_message, send_message, parse_cmd_parameter, PortField
+from common.utils import get_message, send_message, parse_cmd_parameter, PortField, result_from_stdout
 from common.exceptions import CodeException
 from logs.server_log_config import server_log
 from logs.decorators import log
-from io import StringIO
 
 
 class ServerVerifier(type):
@@ -26,12 +25,7 @@ class ServerVerifier(type):
         re_tcp = r'.*LOAD_ATTR.*SOCK_STREAM.*'
         re_connect = r'.*LOAD_METHOD.*connect.*'
 
-        old_stdout = sys.stdout
-        result = StringIO()
-        sys.stdout = result
-        dis.dis(self)
-        result_string = result.getvalue()
-        sys.stdout = old_stdout
+        result_string = result_from_stdout(dis.dis, self)
 
         if not re.search(re_tcp, result_string):
             raise CodeException('Допустимы только TCP сокеты.')

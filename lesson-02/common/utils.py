@@ -2,6 +2,7 @@ import sys
 import json
 from common.variables import MAX_PACKAGE_LENGTH, ENCODING
 from logs.decorators import log, Log
+from io import StringIO
 
 
 class PortField:
@@ -19,6 +20,17 @@ class PortField:
 
     def __set_name__(self, owner, my_attr):
         self.my_attr = my_attr
+
+
+def result_from_stdout(func, arg):
+    old_stdout = sys.stdout
+    result = StringIO()
+    sys.stdout = result
+    func(arg)
+    result_string = result.getvalue()
+    sys.stdout = old_stdout
+
+    return result_string
 
 
 @Log()
