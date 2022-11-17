@@ -1,6 +1,6 @@
-from db_connect import session, engine
-from db_client import DbClient
-from db_history import DbHistory
+from .db_connect import session, engine
+from .db_client import DbClient
+from .db_history import DbHistory
 
 
 DbClient.metadata.create_all(engine)

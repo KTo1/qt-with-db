@@ -127,7 +127,7 @@ class Client(metaclass=ClientVerifier):
 
         raise ValueError
 
-    def print_help(self):
+    def __print_help(self):
         """
         Выводит справку
         """
@@ -173,7 +173,7 @@ class Client(metaclass=ClientVerifier):
                 break
 
             if msg == '/help' or msg == '.рудз':
-                self.print_help()
+                self.__print_help()
                 continue
 
             if msg == '/online' or msg == '.щтдшту':

@@ -4,6 +4,7 @@ import sys
 import json
 import time
 import socket
+import threading
 
 from select import select
 
@@ -159,10 +160,13 @@ class Server(metaclass=ServerVerifier):
     def get_socket_on_username(self, to_username):
         return self.__users_online_db.get(to_username.replace('/', ''))
 
-    def run(self):
+    def __print_help(self):
+        pass
+
+    def __process_messages(self):
         """
-        Запускает сервер.
-        Пример: server.py -p 8888 -a 127.0.0.1
+        Для потока обработки сообщений
+        :return:
         """
 
         transport = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -179,7 +183,7 @@ class Server(metaclass=ServerVerifier):
             try:
                 client_sock, client_address = transport.accept()
             except OSError as e:
-                print(str(e))
+                pass
             else:
                 clients_sockets.append(client_sock)
             finally:
@@ -233,6 +237,49 @@ class Server(metaclass=ServerVerifier):
                     if client_socket in cl_sock_write:
                         send_message(client_socket, message_send)
 
+    def __process_gui(self):
+        """
+        Для потока администрирования
+        :return:
+        """
+
+        print('Welcome, admin. SHODAN is waiting you.')
+
+        while True:
+            msg = input(f'Введите команду (/help - помощь): ')
+            if not msg:
+                continue
+
+            if msg == '/exit' or msg == '.учше':
+                print('Bye!')
+                time.sleep(2)
+                break
+
+            if msg == '/help' or msg == '.рудз':
+                self.__print_help()
+                continue
+
+    def run(self):
+        """
+        Запускает сервер.
+        Пример: server.py -p 8888 -a 127.0.0.1
+        """
+
+        process_messages = threading.Thread(target=self.__process_messages, daemon=True)
+        process_gui = threading.Thread(target=self.__process_gui, daemon=True)
+
+        process_messages.daemon = True
+        process_gui.daemon = True
+
+        process_messages.start()
+        process_gui.start()
+
+        while True:
+            time.sleep(1)
+            if process_messages.is_alive() and process_gui.is_alive():
+                continue
+            break
+
 
 if __name__ == '__main__':
     listen_address = parse_cmd_parameter('-a', sys.argv, DEFAULT_IP_ADDRESS,
@@ -243,8 +290,5 @@ if __name__ == '__main__':
     if listen_port is None or listen_address is None:
         raise ValueError('Неверно заданы параметры командной строки')
 
-    # process parameter
-    listen_port = int(listen_port)
-
-    server = Server(listen_address, listen_port)
+    server = Server(listen_address, int(listen_port))
     server.run()
