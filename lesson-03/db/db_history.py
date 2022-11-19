@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
-from .db_connect import Base
+from db_connect import Base
 
 
 class DbHistory(Base):

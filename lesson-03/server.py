@@ -44,8 +44,8 @@ class Server(metaclass=ServerVerifier):
     __listen_port = PortField()
 
     def __init__(self, listen_address, listen_port):
-        self.__users_db = ['Guest', 'Bazil', 'KTo', 'User']
-        self.__users_online_db = {}
+        self.__clients_db = ['Guest', 'Bazil', 'KTo', 'User']
+        self.__clients_online_db = {}
         self.__listen_address = listen_address
         self.__listen_port = listen_port
         self.__storage = ServerStorage()
@@ -80,11 +80,11 @@ class Server(metaclass=ServerVerifier):
             ERROR: 'Bad Request'
         }
 
-    def create_common_message(self, response, user):
+    def create_common_message(self, response, client):
         return {
             RESPONSE: response,
             TIME: time.time(),
-            USER: user,
+            USER: client,
             MESSAGE: ''
         }
 
@@ -100,7 +100,7 @@ class Server(metaclass=ServerVerifier):
 
         return message
 
-    def create_no_user_answer(self):
+    def create_no_client_answer(self):
         """
         Генерирует сообщение пользователь не найден
         :param response:
@@ -112,7 +112,7 @@ class Server(metaclass=ServerVerifier):
 
         return message
 
-    def create_user_online_answer(self):
+    def create_client_online_answer(self):
         """
         Генерирует сообщение пользователи онлайн
         :param response:
@@ -122,7 +122,7 @@ class Server(metaclass=ServerVerifier):
         message = self.create_common_message(203, USERNAME_SERVER)
 
         message_text = 'Список пользователей онлайн: \n'
-        message_text += '\n'.join(['/' + user for user in self.__users_online_db])
+        message_text += '\n'.join(['/' + client for client in self.__clients_online_db])
 
         message[MESSAGE] = message_text
 
@@ -152,23 +152,23 @@ class Server(metaclass=ServerVerifier):
 
         return message
 
-    def register_user(self, user):
-        if not self.__storage.get_user(user):
-            self.__storage.add_user(user)
+    def register_client(self, client):
+        if not self.__storage.get_client(client):
+            self.__storage.add_client(client)
 
-    def register_user_online(self, user, socket):
-        self.__users_online_db[user] = socket
-        self.__storage.register_user_online(user)
+    def register_client_online(self, client, socket):
+        self.__clients_online_db[client] = socket
+        self.__storage.register_client_online(client)
 
-    def register_user_action(self, user, action, info):
-        self.__storage.register_user_action(user, action, info)
+    def register_client_action(self, client, action, info):
+        self.__storage.register_client_action(client, action, info)
 
-    def unregister_user_online(self, user):
-        self.__storage.unregister_user_online(user)
-        del self.__users_online_db[user]
+    def unregister_client_online(self, client):
+        self.__storage.unregister_client_online(client)
+        del self.__clients_online_db[client]
 
-    def get_socket_on_username(self, to_username):
-        return self.__users_online_db.get(to_username.replace('/', ''))
+    def get_socket_on_clientname(self, to_client):
+        return self.__clients_online_db.get(to_client.replace('/', ''))
 
     def __print_help(self):
         """
@@ -178,8 +178,8 @@ class Server(metaclass=ServerVerifier):
         help_string = 'Справка по командам:\n'
         help_string += '/help - эта справка\n'
         help_string += '/online - кто онлайн?\n'
-        help_string += '/users - список пользователей сервера\n'
-        help_string += '/hist -u User - история работы пользователя User, если пусто то все пользователи\n'
+        help_string += '/clients - список пользователей сервера\n'
+        help_string += '/hist -u client - история работы пользователя client, если пусто то все пользователи\n'
         help_string += '/stop - остановка сервера\n'
 
         print(help_string)
@@ -224,34 +224,34 @@ class Server(metaclass=ServerVerifier):
                             # Пока так, 200 это приветствие
                             if response[RESPONSE] == 200 and client_socket in cl_sock_write:
                                 send_message(client_socket, response)
-                                user_name = response[MESSAGE][USER][ACCOUNT_NAME]
+                                client_name = response[MESSAGE][USER][ACCOUNT_NAME]
 
-                                self.register_user(user_name)
-                                self.register_user_online(user_name, client_socket)
-                                self.register_user_action(user_name, 'login', 'ip address')
+                                self.register_client(client_name)
+                                self.register_client_online(client_name, client_socket)
+                                self.register_client_action(client_name, 'login', 'ip address')
 
                             # Пока так, 201 это сообщение
                             if response[RESPONSE] == 201:
-                                user_socket = self.get_socket_on_username(response[MESSAGE][TO_USERNAME])
+                                client_socket = self.get_socket_on_clientname(response[MESSAGE][TO_USERNAME])
 
-                                if user_socket:
-                                    message_pool.append((user_socket, self.create_answer(response)))
+                                if client_socket:
+                                    message_pool.append((client_socket, self.create_answer(response)))
                                 else:
-                                    message_pool.append((client_socket, self.create_no_user_answer()))
+                                    message_pool.append((client_socket, self.create_no_client_answer()))
 
-                                self.register_user_action(response[MESSAGE][USER][ACCOUNT_NAME], 'send message', response[MESSAGE][TO_USERNAME])
+                                self.register_client_action(response[MESSAGE][USER][ACCOUNT_NAME], 'send message', response[MESSAGE][TO_USERNAME])
 
                             # Пока так, 202 это выход
                             if response[RESPONSE] == 202 and client_socket in cl_sock_write:
                                 clients_sockets.remove(client_socket)
                                 client_socket.close()
-                                self.register_user_action(response[MESSAGE][USER][ACCOUNT_NAME], 'exit', 'ip address')
-                                self.unregister_user_online(response[MESSAGE][USER][ACCOUNT_NAME])
+                                self.register_client_action(response[MESSAGE][USER][ACCOUNT_NAME], 'exit', 'ip address')
+                                self.unregister_client_online(response[MESSAGE][USER][ACCOUNT_NAME])
 
                             # Пока так, 203 это запрос пользователей онлайн
                             if response[RESPONSE] == 203 and client_socket in cl_sock_write:
-                                self.register_user_action(response[MESSAGE][USER][ACCOUNT_NAME], 'get online', 'ip address')
-                                message_pool.append((client_socket, self.create_user_online_answer()))
+                                self.register_client_action(response[MESSAGE][USER][ACCOUNT_NAME], 'get online', 'ip address')
+                                message_pool.append((client_socket, self.create_client_online_answer()))
 
                     except (ValueError, json.JSONDecodeError):
                         server_log.exception('Принято некорректное сообщение от клиента')

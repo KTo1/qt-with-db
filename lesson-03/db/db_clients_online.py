@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
-from .db_connect import Base
+from db_connect import Base
 
 
 class DbClientsOnline(Base):
