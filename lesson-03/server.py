@@ -48,6 +48,7 @@ class Server(metaclass=ServerVerifier):
         self.__users_online_db = {}
         self.__listen_address = listen_address
         self.__listen_port = listen_port
+        self.__storage = ServerStorage()
 
     def process_client_message(self, message):
         """
@@ -151,17 +152,37 @@ class Server(metaclass=ServerVerifier):
 
         return message
 
+    def register_user(self, user):
+        if not self.__storage.get_user(user):
+            self.__storage.add_user(user)
+
     def register_user_online(self, user, socket):
         self.__users_online_db[user] = socket
+        self.__storage.register_user_online(user)
+
+    def register_user_action(self, user, action, info):
+        self.__storage.register_user_action(user, action, info)
 
     def unregister_user_online(self, user):
+        self.__storage.unregister_user_online(user)
         del self.__users_online_db[user]
 
     def get_socket_on_username(self, to_username):
         return self.__users_online_db.get(to_username.replace('/', ''))
 
     def __print_help(self):
-        pass
+        """
+        Выводит справку
+        """
+
+        help_string = 'Справка по командам:\n'
+        help_string += '/help - эта справка\n'
+        help_string += '/online - кто онлайн?\n'
+        help_string += '/users - список пользователей сервера\n'
+        help_string += '/hist -u User - история работы пользователя User, если пусто то все пользователи\n'
+        help_string += '/stop - остановка сервера\n'
+
+        print(help_string)
 
     def __process_messages(self):
         """
@@ -203,24 +224,33 @@ class Server(metaclass=ServerVerifier):
                             # Пока так, 200 это приветствие
                             if response[RESPONSE] == 200 and client_socket in cl_sock_write:
                                 send_message(client_socket, response)
-                                self.register_user_online(response[MESSAGE][USER][ACCOUNT_NAME], client_socket)
+                                user_name = response[MESSAGE][USER][ACCOUNT_NAME]
+
+                                self.register_user(user_name)
+                                self.register_user_online(user_name, client_socket)
+                                self.register_user_action(user_name, 'login', 'ip address')
 
                             # Пока так, 201 это сообщение
                             if response[RESPONSE] == 201:
                                 user_socket = self.get_socket_on_username(response[MESSAGE][TO_USERNAME])
+
                                 if user_socket:
                                     message_pool.append((user_socket, self.create_answer(response)))
                                 else:
                                     message_pool.append((client_socket, self.create_no_user_answer()))
 
+                                self.register_user_action(response[MESSAGE][USER][ACCOUNT_NAME], 'send message', response[MESSAGE][TO_USERNAME])
+
                             # Пока так, 202 это выход
                             if response[RESPONSE] == 202 and client_socket in cl_sock_write:
                                 clients_sockets.remove(client_socket)
                                 client_socket.close()
+                                self.register_user_action(response[MESSAGE][USER][ACCOUNT_NAME], 'exit', 'ip address')
                                 self.unregister_user_online(response[MESSAGE][USER][ACCOUNT_NAME])
 
                             # Пока так, 203 это запрос пользователей онлайн
                             if response[RESPONSE] == 203 and client_socket in cl_sock_write:
+                                self.register_user_action(response[MESSAGE][USER][ACCOUNT_NAME], 'get online', 'ip address')
                                 message_pool.append((client_socket, self.create_user_online_answer()))
 
                     except (ValueError, json.JSONDecodeError):
@@ -250,7 +280,7 @@ class Server(metaclass=ServerVerifier):
             if not msg:
                 continue
 
-            if msg == '/exit' or msg == '.учше':
+            if msg == '/stop' or msg == '.ыещз':
                 print('Bye!')
                 time.sleep(2)
                 break
