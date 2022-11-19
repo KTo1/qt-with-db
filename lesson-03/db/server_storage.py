@@ -1,5 +1,6 @@
-import datetime
 
+from sqlalchemy import update
+from datetime import datetime
 from db_connect import session, engine
 from db_client import DbClient
 from db_history import DbHistory
@@ -13,8 +14,8 @@ DbClientsOnline.metadata.create_all(engine)
 
 class ServerStorage:
 
-    def get_client(self, client):
-        data = session.query(DbClient).filter(DbClient.login == client).limit(1).first()
+    def get_client(self, client_login):
+        data = session.query(DbClient).filter(DbClient.login == client_login).limit(1).first()
         return data.id if data else 0
 
     def add_client(self, client, info=''):
@@ -22,20 +23,47 @@ class ServerStorage:
         session.add(client)
         session.commit()
 
-    def register_client_online(self, client_id, info):
-        client_online = DbClientsOnline(client_id, info)
+    def update_client(self, client_id, info=''):
+        u = update(DbClient)
+        u = u.values({'info': info})
+        u = u.where(DbClient.id == client_id)
+        engine.execute(u)
+
+    def register_client_online(self, client_id, ip_address, port, info):
+        client_online = DbClientsOnline(client_id, ip_address, port, info)
         session.add(client_online)
         session.commit()
 
     def unregister_client_online(self, client_id):
-        session.query(DbHistory).filter(DbHistory.client_id == client_id).delete()
+        session.query(DbClientsOnline).filter(DbClientsOnline.client_id == client_id).delete()
         session.commit()
 
     def register_client_action(self, client_id, action, info):
-        history = DbHistory(client_id, datetime.datetime.now(), action, info)
+        history = DbHistory(client_id, datetime.now(), action, info)
         session.add(history)
         session.commit()
 
+    def get_clients_online(self):
+        query = session.query(DbClientsOnline)
+        query.join(DbClient, DbClientsOnline.client_id == DbClient.id, isouter=True)
+        data = query.all()
+
+        return data
+
+    def get_register_clients(self):
+        data = session.query(DbClient).all()
+        return data
+
+    def get_history(self, client_id):
+        if client_id:
+            data = session.query(DbHistory).filter(DbHistory.client_id == client_id).all()
+        else:
+            data = session.query(DbHistory).all()
+        return data
+
+    def clear_online(self):
+        session.query(DbClientsOnline).delete()
+        session.commit()
 
 if __name__ == '__main__':
 

@@ -5,6 +5,7 @@ import json
 import time
 import socket
 import threading
+from datetime import datetime
 
 from select import select
 
@@ -60,19 +61,19 @@ class Server(metaclass=ServerVerifier):
         server_log.debug(f'Вызов функции "process_client_message", с параметрами: {str(message)}')
 
         if ACTION in message and message[ACTION] == PRESENCE and TIME in message \
-                and USER in message and message[USER][ACCOUNT_NAME] in self.__users_db:
+                and USER in message and message[USER][ACCOUNT_NAME] in self.__clients_db:
             return {RESPONSE: 200, MESSAGE: message}
 
         if ACTION in message and message[ACTION] == MESSAGE and TIME in message \
-                and USER in message and message[USER][ACCOUNT_NAME] in self.__users_db:
+                and USER in message and message[USER][ACCOUNT_NAME] in self.__clients_db:
             return {RESPONSE: 201, MESSAGE: message}
 
         if ACTION in message and message[ACTION] == EXIT and TIME in message \
-                and USER in message and message[USER][ACCOUNT_NAME] in self.__users_db:
+                and USER in message and message[USER][ACCOUNT_NAME] in self.__clients_db:
             return {RESPONSE: 202, MESSAGE: message}
 
         if ACTION in message and message[ACTION] == USERS_ONLINE and TIME in message \
-                and USER in message and message[USER][ACCOUNT_NAME] in self.__users_db:
+                and USER in message and message[USER][ACCOUNT_NAME] in self.__clients_db:
             return {RESPONSE: 203, MESSAGE: message}
 
         return {
@@ -152,19 +153,58 @@ class Server(metaclass=ServerVerifier):
 
         return message
 
-    def register_client(self, client):
-        if not self.__storage.get_client(client):
-            self.__storage.add_client(client)
+    def get_clients_online(self):
+        clients_online = self.__storage.get_clients_online()
+        result = 'Список пользователей онлайн: \n'
+        for elem in clients_online:
+            result += f'id: {str(elem.client_id)}, login: {elem.login}' + '\n'
+        return result
 
-    def register_client_online(self, client, socket):
+    def get_register_clients(self):
+        clients = self.__storage.get_register_clients()
+        result = 'Список зарегистрированных пользователей: \n'
+        for elem in clients:
+            result += str(elem) + '\n'
+        return result
+
+    def get_history(self, client):
+        # TODO закешировать
+        client_id = self.__storage.get_client(client)
+
+        history = self.__storage.get_history(client_id)
+        result = 'История: \n'
+        for elem in history:
+            result += str(elem) + '\n'
+        return result
+
+    def clear_online(self):
+        self.__storage.clear_online()
+
+    def register_client(self, client):
+        client_id = self.__storage.get_client(client)
+        if not client_id:
+            self.__storage.add_client(client, datetime.now())
+        else:
+            self.__storage.update_client(client_id, datetime.now())
+
+    def register_client_online(self, client, socket, ip_address, port):
+        # TODO закешировать
+        client_id = self.__storage.get_client(client)
+
         self.__clients_online_db[client] = socket
-        self.__storage.register_client_online(client)
+        self.__storage.register_client_online(client_id, ip_address, port, datetime.now())
 
     def register_client_action(self, client, action, info):
-        self.__storage.register_client_action(client, action, info)
+        # TODO закешировать
+        client_id = self.__storage.get_client(client)
+
+        self.__storage.register_client_action(client_id, action, info)
 
     def unregister_client_online(self, client):
-        self.__storage.unregister_client_online(client)
+        # TODO закешировать
+        client_id = self.__storage.get_client(client)
+
+        self.__storage.unregister_client_online(client_id)
         del self.__clients_online_db[client]
 
     def get_socket_on_clientname(self, to_client):
@@ -197,6 +237,8 @@ class Server(metaclass=ServerVerifier):
         transport.listen(MAX_CONNECTIONS)
         transport.settimeout(1)
 
+        self.clear_online()
+
         clients_sockets = []
         server_log.info(f'Сервер запущен по адресу: {self.__listen_address}: {self.__listen_port}')
 
@@ -227,8 +269,8 @@ class Server(metaclass=ServerVerifier):
                                 client_name = response[MESSAGE][USER][ACCOUNT_NAME]
 
                                 self.register_client(client_name)
-                                self.register_client_online(client_name, client_socket)
-                                self.register_client_action(client_name, 'login', 'ip address')
+                                self.register_client_online(client_name, client_socket, str(client_address[0]), str(client_address[1]))
+                                self.register_client_action(client_name, 'login', str(client_address))
 
                             # Пока так, 201 это сообщение
                             if response[RESPONSE] == 201:
@@ -245,12 +287,13 @@ class Server(metaclass=ServerVerifier):
                             if response[RESPONSE] == 202 and client_socket in cl_sock_write:
                                 clients_sockets.remove(client_socket)
                                 client_socket.close()
-                                self.register_client_action(response[MESSAGE][USER][ACCOUNT_NAME], 'exit', 'ip address')
+
+                                self.register_client_action(response[MESSAGE][USER][ACCOUNT_NAME], 'exit', str(client_address))
                                 self.unregister_client_online(response[MESSAGE][USER][ACCOUNT_NAME])
 
                             # Пока так, 203 это запрос пользователей онлайн
                             if response[RESPONSE] == 203 and client_socket in cl_sock_write:
-                                self.register_client_action(response[MESSAGE][USER][ACCOUNT_NAME], 'get online', 'ip address')
+                                self.register_client_action(response[MESSAGE][USER][ACCOUNT_NAME], 'get online', str(client_address))
                                 message_pool.append((client_socket, self.create_client_online_answer()))
 
                     except (ValueError, json.JSONDecodeError):
@@ -285,9 +328,19 @@ class Server(metaclass=ServerVerifier):
                 time.sleep(2)
                 break
 
+            if msg == '/online' or msg == '.ыещз':
+                print(self.get_clients_online())
+
+            if msg == '/clients' or msg == '.ыещз':
+                print(self.get_register_clients())
+
+            if '/hist' in msg:
+                param = msg.split()
+                client_name = param[1].replace('/', '') if len(param) > 1 else ''
+                print(self.get_history(client_name))
+
             if msg == '/help' or msg == '.рудз':
                 self.__print_help()
-                continue
 
     def run(self):
         """

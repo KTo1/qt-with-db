@@ -1,2 +1,5 @@
+import os
 import sys
-sys.path.append(r'.')
+
+sys.path.append(os.path.join(os.getcwd(), 'db'))
+# print(sys.path)
