@@ -28,7 +28,8 @@ class ServerStorage:
         session.commit()
 
     def unregister_client_online(self, client_id):
-        session.query(DbClient).filter(DbClient.client_id == client_id).delete()
+        session.query(DbHistory).filter(DbHistory.client_id == client_id).delete()
+        session.commit()
 
     def register_client_action(self, client_id, action, info):
         history = DbHistory(client_id, datetime.datetime.now(), action, info)
@@ -54,14 +55,12 @@ if __name__ == '__main__':
     user_id2 = sto.get_client('kto')
     sto.register_client_online(user_id2, '127.0.0.1')
 
-    sto.unregister_client_online()
+    sto.unregister_client_online(user_id1)
+    sto.unregister_client_online(user_id2)
 
-    # history = DbHistory(client.id, datetime.datetime.now(), 'login', '127.0.0.1')
-    # client_online = DbClientsOnline(client.id, '127.0.0.1')
-    # session.add(history)
-    # session.add(client_online)
-    # session.commit()
-    #
-    # sto = ServerStorage()
+    sto.register_client_action(user_id1, 'login', '127.0.0.1')
+    sto.register_client_action(user_id1, 'exit', '127.0.0.1')
 
+    sto.register_client_action(user_id2, 'login', '127.0.0.1')
+    sto.register_client_action(user_id2, 'exit', '127.0.0.1')
 
