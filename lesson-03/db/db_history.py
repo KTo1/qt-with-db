@@ -18,4 +18,4 @@ class DbHistory(Base):
         self.info = info
 
     def __repr__(self):
-        return f'<history {self.client_id}, {self.date_action}, {self.info}>'
+        return f'< {self.client_id}, {self.date_action}, {self.action}, {self.info}>'

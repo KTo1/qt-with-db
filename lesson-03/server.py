@@ -157,7 +157,7 @@ class Server(metaclass=ServerVerifier):
         clients_online = self.__storage.get_clients_online()
         result = 'Список пользователей онлайн: \n'
         for elem in clients_online:
-            result += f'id: {str(elem.client_id)}, login: {elem.login}' + '\n'
+            result += f'login: {str(elem[2])}, ip: {elem[0]}, info: {elem[1]}' + '\n'
         return result
 
     def get_register_clients(self):
@@ -219,7 +219,7 @@ class Server(metaclass=ServerVerifier):
         help_string += '/help - эта справка\n'
         help_string += '/online - кто онлайн?\n'
         help_string += '/clients - список пользователей сервера\n'
-        help_string += '/hist -u client - история работы пользователя client, если пусто то все пользователи\n'
+        help_string += '/hist client - история работы пользователя client, если пусто то все пользователи\n'
         help_string += '/stop - остановка сервера\n'
 
         print(help_string)
@@ -336,7 +336,7 @@ class Server(metaclass=ServerVerifier):
 
             if '/hist' in msg:
                 param = msg.split()
-                client_name = param[1].replace('/', '') if len(param) > 1 else ''
+                client_name = param[1] if len(param) > 1 else ''
                 print(self.get_history(client_name))
 
             if msg == '/help' or msg == '.рудз':

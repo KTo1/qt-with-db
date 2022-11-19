@@ -1,5 +1,5 @@
 
-from sqlalchemy import update
+from sqlalchemy import update, select
 from datetime import datetime
 from db_connect import session, engine
 from db_client import DbClient
@@ -44,9 +44,12 @@ class ServerStorage:
         session.commit()
 
     def get_clients_online(self):
-        query = session.query(DbClientsOnline)
-        query.join(DbClient, DbClientsOnline.client_id == DbClient.id, isouter=True)
-        data = query.all()
+        stm = select(DbClientsOnline.ip_address, DbClientsOnline.info, DbClient.login).join(DbClient, DbClientsOnline.client_id == DbClient.id, isouter=True)
+        data = []
+        result = session.execute(stm)
+
+        for row in result:
+            data.append(row)
 
         return data
 
@@ -55,10 +58,17 @@ class ServerStorage:
         return data
 
     def get_history(self, client_id):
+        data = []
         if client_id:
-            data = session.query(DbHistory).filter(DbHistory.client_id == client_id).all()
+            stm = select(DbClient.login, DbHistory).where(DbHistory.client_id == client_id).join(DbClient, DbHistory.client_id == DbClient.id, isouter=True)
         else:
-            data = session.query(DbHistory).all()
+            stm = select(DbClient.login, DbHistory).join(DbClient, DbHistory.client_id == DbClient.id, isouter=True)
+
+        result = session.execute(stm)
+
+        for row in result:
+            data.append(row)
+
         return data
 
     def clear_online(self):

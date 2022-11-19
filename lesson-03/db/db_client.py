@@ -14,4 +14,4 @@ class DbClient(Base):
         self.info = info
 
     def __repr__(self):
-        return f'id: {self.id}, login>: {self.login}, {self.info}'
+        return f'id: {self.id}, login>: {self.login}, last login: {self.info}'
