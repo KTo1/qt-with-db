@@ -7,7 +7,8 @@ import socket
 import threading
 
 from common.variables import (DEFAULT_PORT, DEFAULT_IP_ADDRESS, ACTION, PRESENCE, TIME, USER,
-                              ACCOUNT_NAME, RESPONSE, ERROR, DEFAULT_USER, MESSAGE, EXIT, TO_USERNAME, USERS_ONLINE)
+                              ACCOUNT_NAME, RESPONSE, ERROR, DEFAULT_USER, MESSAGE, EXIT, TO_USERNAME, USERS_ONLINE,
+                              ACTION_GET_CONTACTS)
 from common.utils import get_message, send_message, parse_cmd_parameter, PortField, result_from_stdout
 from common.exceptions import CodeException
 from logs.client_log_config import client_log
@@ -62,6 +63,9 @@ class Client(metaclass=ClientVerifier):
         }
 
         return result
+
+    def create_contacts_request(self, account_name):
+        return self.create_common_message(account_name, ACTION_GET_CONTACTS)
 
     def create_online_request(self, account_name):
         """

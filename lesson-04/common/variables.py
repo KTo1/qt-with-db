@@ -19,9 +19,13 @@ TIME = 'time'
 USER = 'user'
 ACCOUNT_NAME = 'account_name'
 
+ACTION_GET_CONTACTS = 'get_contacts'
+ACTION_ADD_CONTACT = 'add_contact'
+ACTION_DEL_CONTACT = 'del_contact'
+
 # Прочие ключи, используемые в протоколе
-USERS_ONLINE = 'users_online'
 USERNAME_SERVER = 'server'
+USERS_ONLINE = 'users_online'
 TO_USERNAME = 'to_username'
 PRESENCE = 'presence'
 MESSAGE = 'message'

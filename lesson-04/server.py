@@ -11,7 +11,7 @@ from select import select
 
 from common.variables import (MAX_CONNECTIONS, RESPONSE, ERROR, TIME, USER, ACTION, ACCOUNT_NAME, PRESENCE,
                               DEFAULT_PORT, DEFAULT_IP_ADDRESS, MESSAGE, EXIT, TO_USERNAME, USERNAME_SERVER,
-                              USERS_ONLINE)
+                              USERS_ONLINE, ACTION_GET_CONTACTS)
 from common.utils import get_message, send_message, parse_cmd_parameter, PortField, result_from_stdout
 from common.exceptions import CodeException
 from logs.server_log_config import server_log
@@ -45,7 +45,6 @@ class Server(metaclass=ServerVerifier):
     __listen_port = PortField()
 
     def __init__(self, listen_address, listen_port):
-        self.__clients_db = ['Guest', 'Bazil', 'KTo', 'User']
         self.__clients_online_db = {}
         self.__listen_address = listen_address
         self.__listen_port = listen_port
@@ -58,23 +57,20 @@ class Server(metaclass=ServerVerifier):
         возвращает словарь-ответ для клиента
         """
 
-        server_log.debug(f'Вызов функции "process_client_message", с параметрами: {str(message)}')
-
-        if ACTION in message and message[ACTION] == PRESENCE and TIME in message \
-                and USER in message and message[USER][ACCOUNT_NAME] in self.__clients_db:
+        if ACTION in message and message[ACTION] == PRESENCE and TIME in message and USER in message:
             return {RESPONSE: 200, MESSAGE: message}
 
-        if ACTION in message and message[ACTION] == MESSAGE and TIME in message \
-                and USER in message and message[USER][ACCOUNT_NAME] in self.__clients_db:
+        if ACTION in message and message[ACTION] == MESSAGE and TIME in message and USER in message:
             return {RESPONSE: 201, MESSAGE: message}
 
-        if ACTION in message and message[ACTION] == EXIT and TIME in message \
-                and USER in message and message[USER][ACCOUNT_NAME] in self.__clients_db:
+        if ACTION in message and message[ACTION] == EXIT and TIME in message and USER in message:
             return {RESPONSE: 202, MESSAGE: message}
 
-        if ACTION in message and message[ACTION] == USERS_ONLINE and TIME in message \
-                and USER in message and message[USER][ACCOUNT_NAME] in self.__clients_db:
+        if ACTION in message and message[ACTION] == USERS_ONLINE and TIME in message and USER in message:
             return {RESPONSE: 203, MESSAGE: message}
+
+        if ACTION in message and message[ACTION] == ACTION_GET_CONTACTS and TIME in message and USER in message:
+            return {RESPONSE: 204, MESSAGE: message}
 
         return {
             RESPONSE: 400,
@@ -166,6 +162,11 @@ class Server(metaclass=ServerVerifier):
         for elem in clients:
             result += str(elem) + '\n'
         return result
+
+    def get_client_contacts(self, client):
+        # TODO закешировать
+        client_id = self.__storage.get_client(client)
+
 
     def get_history(self, client):
         # TODO закешировать
@@ -294,6 +295,11 @@ class Server(metaclass=ServerVerifier):
                             # Пока так, 203 это запрос пользователей онлайн
                             if response[RESPONSE] == 203 and client_socket in cl_sock_write:
                                 self.register_client_action(response[MESSAGE][USER][ACCOUNT_NAME], 'get online', str(client_address))
+                                message_pool.append((client_socket, self.create_client_online_answer()))
+
+                            # Пока так, 204 это запрос списка контактов
+                            if response[RESPONSE] == 203 and client_socket in cl_sock_write:
+                                self.register_client_action(response[MESSAGE][USER][ACCOUNT_NAME], 'get contacts', str(client_address))
                                 message_pool.append((client_socket, self.create_client_online_answer()))
 
                     except (ValueError, json.JSONDecodeError):
