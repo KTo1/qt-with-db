@@ -298,7 +298,7 @@ class Server(metaclass=ServerVerifier):
                                 message_pool.append((client_socket, self.create_client_online_answer()))
 
                             # Пока так, 204 это запрос списка контактов
-                            if response[RESPONSE] == 203 and client_socket in cl_sock_write:
+                            if response[RESPONSE] == 204 and client_socket in cl_sock_write:
                                 self.register_client_action(response[MESSAGE][USER][ACCOUNT_NAME], 'get contacts', str(client_address))
                                 message_pool.append((client_socket, self.create_client_online_answer()))
 

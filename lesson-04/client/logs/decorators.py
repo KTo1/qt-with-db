@@ -2,7 +2,6 @@ import os
 import sys
 
 from client_log_config import client_log
-from server_log_config import server_log
 
 import traceback
 
