@@ -5,11 +5,13 @@ from db_connect import session, engine
 from db_client import DbClient
 from db_history import DbHistory
 from db_clients_online import DbClientsOnline
+from db_contacts import DbContacts
 
 
 DbClient.metadata.create_all(engine)
 DbHistory.metadata.create_all(engine)
 DbClientsOnline.metadata.create_all(engine)
+DbContacts.metadata.create_all(engine)
 
 
 class ServerStorage:
@@ -60,9 +62,9 @@ class ServerStorage:
     def get_history(self, client_id):
         data = []
         if client_id:
-            stm = select(DbClient.login, DbHistory).where(DbHistory.client_id == client_id).join(DbClient, DbHistory.client_id == DbClient.id, isouter=True)
+            stm = select(DbClient.login).where(DbHistory.client_id == client_id).join(DbClient, DbHistory.client_id == DbClient.id, isouter=True)
         else:
-            stm = select(DbClient.login, DbHistory).join(DbClient, DbHistory.client_id == DbClient.id, isouter=True)
+            stm = select(DbClient.login).join(DbClient, DbHistory.client_id == DbClient.id, isouter=True)
 
         result = session.execute(stm)
 
@@ -74,6 +76,27 @@ class ServerStorage:
     def clear_online(self):
         session.query(DbClientsOnline).delete()
         session.commit()
+
+    def add_contact(self, client_id, contact_id):
+        contact = DbContacts(client_id, contact_id)
+        session.add(contact)
+        session.commit()
+
+    def del_contact(self, client_id, contact_id):
+        contact = DbContacts(client_id, contact_id)
+        session.add(contact)
+        session.commit()
+
+    def get_contacts(self, client_id):
+        data = []
+        stm = select(DbClient.login, DbContacts).where(DbContacts.client_id == client_id).join(DbClient, DbContacts.contact_id == DbClient.id, isouter=True)
+
+        result = session.execute(stm)
+
+        for row in result:
+            data.append(row)
+
+        return data
 
 if __name__ == '__main__':
 
@@ -87,18 +110,25 @@ if __name__ == '__main__':
     if not sto.get_client('kto'):
         sto.add_client('kto', 'admin')
 
-    user_id1 = sto.get_client('kto1')
-    sto.register_client_online(user_id1, '127.0.0.1')
+    client_id1 = sto.get_client('kto1')
+    sto.register_client_online(client_id1, '127.0.0.1', '1111', '')
 
-    user_id2 = sto.get_client('kto')
-    sto.register_client_online(user_id2, '127.0.0.1')
+    client_id2 = sto.get_client('kto')
+    sto.register_client_online(client_id2, '127.0.0.1', '1111', '')
 
-    sto.unregister_client_online(user_id1)
-    sto.unregister_client_online(user_id2)
+    sto.unregister_client_online(client_id1)
+    sto.unregister_client_online(client_id2)
 
-    sto.register_client_action(user_id1, 'login', '127.0.0.1')
-    sto.register_client_action(user_id1, 'exit', '127.0.0.1')
+    sto.register_client_action(client_id1, 'login', '127.0.0.1')
+    sto.register_client_action(client_id1, 'exit', '127.0.0.1')
 
-    sto.register_client_action(user_id2, 'login', '127.0.0.1')
-    sto.register_client_action(user_id2, 'exit', '127.0.0.1')
+    sto.register_client_action(client_id2, 'login', '127.0.0.1')
+    sto.register_client_action(client_id2, 'exit', '127.0.0.1')
 
+    sto.add_contact(client_id1, client_id1)
+    sto.add_contact(client_id1, client_id2)
+
+    sto.add_contact(client_id2, client_id1)
+    sto.add_contact(client_id2, client_id2)
+
+    print(sto.get_contacts(1))

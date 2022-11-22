@@ -3,7 +3,7 @@ from db_connect import Base
 
 
 class DbContacts(Base):
-    __tablename__ = 'clients'
+    __tablename__ = 'contacts'
 
     id = Column(Integer, primary_key=True)
     login = Column(String)
