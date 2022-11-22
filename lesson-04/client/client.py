@@ -8,7 +8,7 @@ import threading
 
 from common.variables import (DEFAULT_PORT, DEFAULT_IP_ADDRESS, ACTION, PRESENCE, TIME, USER,
                               ACCOUNT_NAME, RESPONSE, ERROR, DEFAULT_USER, MESSAGE, EXIT, TO_USERNAME, USERS_ONLINE,
-                              ACTION_GET_CONTACTS)
+                              ACTION_GET_CONTACTS, ACTION_ADD_CONTACT, ACTION_DEL_CONTACT)
 from common.utils import get_message, send_message, parse_cmd_parameter, PortField, result_from_stdout
 from common.exceptions import CodeException
 from logs.client_log_config import client_log
@@ -67,6 +67,18 @@ class Client(metaclass=ClientVerifier):
     def create_contacts_request(self, account_name):
         return self.create_common_message(account_name, ACTION_GET_CONTACTS)
 
+    def create_add_contacts_message(self, account_name, contact_name):
+        result = self.create_common_message(account_name, ACTION_ADD_CONTACT)
+        result[TO_USERNAME] = contact_name
+
+        return result
+
+    def create_del_contacts_message(self, account_name, contact_name):
+        result = self.create_common_message(account_name, ACTION_DEL_CONTACT)
+        result[TO_USERNAME] = contact_name
+
+        return result
+
     def create_online_request(self, account_name):
         """
         Функция генерирует запрос о пользователях онлайн
@@ -123,7 +135,7 @@ class Client(metaclass=ClientVerifier):
             if answer[RESPONSE] == 200:
                 return '200 : OK'
 
-            if answer[RESPONSE] == 201 or answer[RESPONSE] == 202 or answer[RESPONSE] == 203:
+            if answer[RESPONSE] in [201, 202, 203, 204, 205, 300]:
                 time_string = time.strftime('%d.%m.%Y %H:%M', time.localtime(answer[TIME]))
                 return f'<{time_string}> {answer[USER]}: {answer[MESSAGE]}'
 
@@ -138,6 +150,8 @@ class Client(metaclass=ClientVerifier):
 
         help_string = 'Справка по командам:\n'
         help_string += '/help - эта справка\n'
+        help_string += '/contacts - список контактов\n'
+        help_string += '/contact add|del <contact> - добавление|удаление в|из список контактов\n'
         help_string += '/online - кто онлайн?\n'
         help_string += '/exit - выход\n'
         help_string += '/имя_пользователя сообщение - сообщение пользователю\n'
@@ -178,6 +192,19 @@ class Client(metaclass=ClientVerifier):
 
             if msg == '/help' or msg == '.рудз':
                 self.__print_help()
+                continue
+
+            if msg == '/contacts' or msg == '.сщтефсеы':
+                send_message(transport, self.create_contacts_request(user_name))
+                continue
+
+            if msg.startswith('/contact'):
+                command = msg.split()[1]
+                contact_name = msg.split()[2]
+                if command == 'add':
+                    send_message(transport, self.create_add_contacts_message(user_name, contact_name))
+                else:
+                    send_message(transport, self.create_del_contacts_message(user_name, contact_name))
                 continue
 
             if msg == '/online' or msg == '.щтдшту':

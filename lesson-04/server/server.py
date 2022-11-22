@@ -11,7 +11,7 @@ from select import select
 
 from common.variables import (MAX_CONNECTIONS, RESPONSE, ERROR, TIME, USER, ACTION, ACCOUNT_NAME, PRESENCE,
                               DEFAULT_PORT, DEFAULT_IP_ADDRESS, MESSAGE, EXIT, TO_USERNAME, USERNAME_SERVER,
-                              USERS_ONLINE, ACTION_GET_CONTACTS)
+                              USERS_ONLINE, ACTION_GET_CONTACTS, ACTION_ADD_CONTACT, ACTION_DEL_CONTACT, RESPONSE_OK)
 from common.utils import get_message, send_message, parse_cmd_parameter, PortField, result_from_stdout
 from common.exceptions import CodeException
 from logs.server_log_config import server_log
@@ -50,6 +50,8 @@ class Server(metaclass=ServerVerifier):
         self.__listen_port = listen_port
         self.__storage = ServerStorage()
 
+# region protocol
+
     def process_client_message(self, message):
         """
         Обработчик сообщений от клиентов, принимает словарь -
@@ -71,6 +73,12 @@ class Server(metaclass=ServerVerifier):
 
         if ACTION in message and message[ACTION] == ACTION_GET_CONTACTS and TIME in message and USER in message:
             return {RESPONSE: 204, MESSAGE: message}
+
+        if ACTION in message and message[ACTION] == ACTION_ADD_CONTACT and TIME in message and USER in message:
+            return {RESPONSE: 205, MESSAGE: message}
+
+        if ACTION in message and message[ACTION] == ACTION_DEL_CONTACT and TIME in message and USER in message:
+            return {RESPONSE: 206, MESSAGE: message}
 
         return {
             RESPONSE: 400,
@@ -125,6 +133,22 @@ class Server(metaclass=ServerVerifier):
 
         return message
 
+    def create_client_contacts_answer(self, client_name):
+        """
+        Генерирует сообщение пользователи онлайн
+        :param response:
+        :return:
+        """
+
+        message = self.create_common_message(203, USERNAME_SERVER)
+
+        message_text = 'Список пользователей онлайн: \n'
+        message_text += self.get_client_contacts(client_name)
+
+        message[MESSAGE] = message_text
+
+        return message
+
     def create_answer(self, response):
         """
         Генерирует сообщение пользователю
@@ -149,6 +173,22 @@ class Server(metaclass=ServerVerifier):
 
         return message
 
+    def create_add_contact_answer(self):
+        message = self.create_common_message(300, USERNAME_SERVER)
+        message[MESSAGE] = 'Ok.'
+
+        return message
+
+    def create_del_contact_answer(self):
+        message = self.create_common_message(300, USERNAME_SERVER)
+        message[MESSAGE] = 'Ok.'
+
+        return message
+
+#endregion
+
+# region db
+
     def get_clients_online(self):
         clients_online = self.__storage.get_clients_online()
         result = 'Список пользователей онлайн: \n'
@@ -166,7 +206,28 @@ class Server(metaclass=ServerVerifier):
     def get_client_contacts(self, client):
         # TODO закешировать
         client_id = self.__storage.get_client(client)
+        contacts = self.__storage.get_contacts(client_id)
 
+        result = 'Список контактов: \n'
+        for elem in contacts:
+            result += str(elem[0]) + '\n'
+        return result
+
+    def add_client_contact(self, client, contact):
+        # TODO закешировать
+        client_id = self.__storage.get_client(client)
+        contact_id = self.__storage.get_client(contact)
+
+        self.__storage.add_contact(client_id, contact_id)
+
+        return True
+
+    def del_client_contact(self, client, contact):
+        # TODO закешировать
+        client_id = self.__storage.get_client(client)
+        contact_id = self.__storage.get_client(contact)
+
+        self.__storage.del_contact(client_id, contact_id)
 
     def get_history(self, client):
         # TODO закешировать
@@ -210,6 +271,8 @@ class Server(metaclass=ServerVerifier):
 
     def get_socket_on_clientname(self, to_client):
         return self.__clients_online_db.get(to_client.replace('/', ''))
+
+#endregion
 
     def __print_help(self):
         """
@@ -299,8 +362,29 @@ class Server(metaclass=ServerVerifier):
 
                             # Пока так, 204 это запрос списка контактов
                             if response[RESPONSE] == 204 and client_socket in cl_sock_write:
-                                self.register_client_action(response[MESSAGE][USER][ACCOUNT_NAME], 'get contacts', str(client_address))
-                                message_pool.append((client_socket, self.create_client_online_answer()))
+                                client_name = response[MESSAGE][USER][ACCOUNT_NAME]
+                                self.register_client_action(client_name, 'get contacts', str(client_address))
+                                message_pool.append((client_socket, self.create_client_contacts_answer(client_name)))
+
+                            # Пока так, 205 это запрос на добавление в контакты
+                            if response[RESPONSE] == 205 and client_socket in cl_sock_write:
+                                client_name = response[MESSAGE][USER][ACCOUNT_NAME]
+                                contacts_name = response[MESSAGE][TO_USERNAME]
+
+                                self.add_client_contact(client_name, contacts_name)
+
+                                self.register_client_action(client_name, 'add contact', str(client_address))
+                                message_pool.append((client_socket, self.create_add_contact_answer()))
+
+                            # Пока так, 206 это запрос на удаление из контактов
+                            if response[RESPONSE] == 206 and client_socket in cl_sock_write:
+                                client_name = response[MESSAGE][USER][ACCOUNT_NAME]
+                                contacts_name = response[MESSAGE][TO_USERNAME]
+
+                                self.del_client_contact(client_name, contacts_name)
+
+                                self.register_client_action(client_name, 'del contact', str(client_address))
+                                message_pool.append((client_socket, self.create_del_contact_answer()))
 
                     except (ValueError, json.JSONDecodeError):
                         server_log.exception('Принято некорректное сообщение от клиента')

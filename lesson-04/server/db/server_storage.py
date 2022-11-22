@@ -1,12 +1,10 @@
-
-from sqlalchemy import update, select
+from sqlalchemy import update, select, and_
 from datetime import datetime
 from db_connect import session, engine
 from db_client import DbClient
 from db_history import DbHistory
 from db_clients_online import DbClientsOnline
 from db_contacts import DbContacts
-
 
 DbClient.metadata.create_all(engine)
 DbHistory.metadata.create_all(engine)
@@ -26,10 +24,10 @@ class ServerStorage:
         session.commit()
 
     def update_client(self, client_id, info=''):
-        u = update(DbClient)
-        u = u.values({'info': info})
-        u = u.where(DbClient.id == client_id)
-        engine.execute(u)
+        upd = update(DbClient)
+        upd = upd.values({'info': info})
+        upd = upd.where(DbClient.id == client_id)
+        engine.execute(upd)
 
     def register_client_online(self, client_id, ip_address, port, info):
         client_online = DbClientsOnline(client_id, ip_address, port, info)
@@ -46,7 +44,9 @@ class ServerStorage:
         session.commit()
 
     def get_clients_online(self):
-        stm = select(DbClientsOnline.ip_address, DbClientsOnline.info, DbClient.login).join(DbClient, DbClientsOnline.client_id == DbClient.id, isouter=True)
+        stm = select(DbClientsOnline.ip_address, DbClientsOnline.info, DbClient.login).join(DbClient,
+                                                                                            DbClientsOnline.client_id == DbClient.id,
+                                                                                            isouter=True)
         data = []
         result = session.execute(stm)
 
@@ -62,7 +62,9 @@ class ServerStorage:
     def get_history(self, client_id):
         data = []
         if client_id:
-            stm = select(DbClient.login).where(DbHistory.client_id == client_id).join(DbClient, DbHistory.client_id == DbClient.id, isouter=True)
+            stm = select(DbClient.login).where(DbHistory.client_id == client_id).join(DbClient,
+                                                                                      DbHistory.client_id == DbClient.id,
+                                                                                      isouter=True)
         else:
             stm = select(DbClient.login).join(DbClient, DbHistory.client_id == DbClient.id, isouter=True)
 
@@ -78,18 +80,25 @@ class ServerStorage:
         session.commit()
 
     def add_contact(self, client_id, contact_id):
-        contact = DbContacts(client_id, contact_id)
-        session.add(contact)
-        session.commit()
+        exist = session.query(DbContacts).filter(
+            and_(DbContacts.client_id == client_id, DbContacts.contact_id == contact_id)).limit(1).first()
+        if not exist:
+            contact = DbContacts(client_id, contact_id)
+            session.add(contact)
+            session.commit()
 
     def del_contact(self, client_id, contact_id):
-        contact = DbContacts(client_id, contact_id)
-        session.add(contact)
-        session.commit()
+        exist = session.query(DbContacts).filter(DbContacts.client_id == client_id).limit(1).first()
+        if exist:
+            session.query(DbContacts).where(
+                and_(DbContacts.client_id == client_id, DbContacts.contact_id == contact_id)).delete()
+            session.commit()
 
     def get_contacts(self, client_id):
         data = []
-        stm = select(DbClient.login, DbContacts).where(DbContacts.client_id == client_id).join(DbClient, DbContacts.contact_id == DbClient.id, isouter=True)
+        stm = select(DbClient.login, DbContacts).where(DbContacts.client_id == client_id).join(DbClient,
+                                                                                               DbContacts.contact_id == DbClient.id,
+                                                                                               isouter=True)
 
         result = session.execute(stm)
 
@@ -97,6 +106,7 @@ class ServerStorage:
             data.append(row)
 
         return data
+
 
 if __name__ == '__main__':
 
@@ -126,9 +136,14 @@ if __name__ == '__main__':
     sto.register_client_action(client_id2, 'exit', '127.0.0.1')
 
     sto.add_contact(client_id1, client_id1)
+    sto.add_contact(client_id1, client_id1)
     sto.add_contact(client_id1, client_id2)
 
-    sto.add_contact(client_id2, client_id1)
     sto.add_contact(client_id2, client_id2)
+    sto.add_contact(client_id2, client_id2)
+    sto.add_contact(client_id2, client_id1)
+
+    sto.del_contact(client_id1, client_id1)
+    sto.del_contact(client_id2, client_id2)
 
     print(sto.get_contacts(1))
