@@ -185,7 +185,7 @@ class Server(metaclass=ServerVerifier):
 
         return message
 
-#endregion
+# endregion
 
 # region db
 
@@ -272,7 +272,7 @@ class Server(metaclass=ServerVerifier):
     def get_socket_on_clientname(self, to_client):
         return self.__clients_online_db.get(to_client.replace('/', ''))
 
-#endregion
+# endregion
 
     def __print_help(self):
         """

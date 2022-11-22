@@ -13,6 +13,7 @@ from common.utils import get_message, send_message, parse_cmd_parameter, PortFie
 from common.exceptions import CodeException
 from logs.client_log_config import client_log
 from logs.decorators import log
+from db.client_storage import ClientStorage
 
 
 class ClientVerifier(type):
@@ -52,6 +53,9 @@ class Client(metaclass=ClientVerifier):
         self.__server_address = server_address
         self.__server_port = server_port
         self.__user_name = user_name
+        self.__storage = ClientStorage()
+
+# region protocol
 
     def create_common_message(self, account_name, action):
         result = {
@@ -121,6 +125,18 @@ class Client(metaclass=ClientVerifier):
 
         return result
 
+# endregion
+
+# region db
+
+    def add_message(self, login_from, login_to, message):
+        self.__storage.add_message(login_from, login_to, message)
+
+    def get_messages(self):
+        self.__storage.get_messages()
+
+# endregion
+
     def process_answer(self, answer):
         """
         Функция разбирает ответ сервера
@@ -132,14 +148,14 @@ class Client(metaclass=ClientVerifier):
             return ''
 
         if RESPONSE in answer:
-            if answer[RESPONSE] == 200:
-                return '200 : OK'
+            if answer[RESPONSE] in [200, 300]:
+                return f'{answer[RESPONSE]}: OK', ''
 
-            if answer[RESPONSE] in [201, 202, 203, 204, 205, 300]:
+            if answer[RESPONSE] in [201, 202, 203, 204, 205]:
                 time_string = time.strftime('%d.%m.%Y %H:%M', time.localtime(answer[TIME]))
-                return f'<{time_string}> {answer[USER]}: {answer[MESSAGE]}'
+                return f'<{time_string}> {answer[USER]}: {answer[MESSAGE]}', answer[USER]
 
-            return f'400 : {answer[ERROR]}'
+            return f'400 : {answer[ERROR]}', ''
 
         raise ValueError
 
@@ -214,7 +230,9 @@ class Client(metaclass=ClientVerifier):
             to_username = self.get_username_from_msg(msg)
 
             if to_username and not to_username == user_name:
-                send_message(transport, self.create_message(msg.replace(to_username, ''), user_name, to_username))
+                message = msg.replace(to_username, '')
+                self.add_message(user_name, to_username, message)
+                send_message(transport, self.create_message(message, user_name, to_username))
 
     def recv_messages(self, transport):
         """
@@ -224,12 +242,12 @@ class Client(metaclass=ClientVerifier):
         """
 
         while True:
-            answer = self.process_answer(get_message(transport))
+            answer, user_name = self.process_answer(get_message(transport))
             if answer:
                 print()
                 print('Сообщение от сервера: ')
                 print(answer)
-
+                self.add_message(user_name, self.__user_name, answer)
 
     def run(self):
         """
@@ -250,7 +268,7 @@ class Client(metaclass=ClientVerifier):
         send_message(transport, message)
 
         try:
-            answer = self.process_answer(get_message(transport))
+            answer, user_name = self.process_answer(get_message(transport))
             print(answer)
 
         except (ValueError, json.JSONDecodeError):
