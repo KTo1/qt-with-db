@@ -261,6 +261,13 @@ class Server(metaclass=ServerVerifier):
         self.__clients_online_db[client] = socket
         self.__storage.register_client_online(client_id, ip_address, port, datetime.now())
 
+    def update_stat(self, sender, recipient):
+        # TODO закешировать
+        sender_id = self.__storage.get_client(sender)
+        recipient_id = self.__storage.get_client(recipient)
+
+        self.__storage.update_stat(sender_id, recipient_id)
+
     def register_client_action(self, client, action, info):
         # TODO закешировать
         client_id = self.__storage.get_client(client)
@@ -350,7 +357,11 @@ class Server(metaclass=ServerVerifier):
                                 else:
                                     message_pool.append((client_socket, self.create_no_client_answer()))
 
-                                self.register_client_action(response[MESSAGE][USER][ACCOUNT_NAME], 'send message', response[MESSAGE][TO_USERNAME])
+                                sender_name = response[MESSAGE][USER][ACCOUNT_NAME]
+                                recipient_name = response[MESSAGE][TO_USERNAME].replace('/', '')
+
+                                self.update_stat(sender_name, recipient_name)
+                                self.register_client_action(sender_name, 'send message', recipient_name)
 
                             # Пока так, 202 это выход
                             if response[RESPONSE] == 202 and client_socket in cl_sock_write:

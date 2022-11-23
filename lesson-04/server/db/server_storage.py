@@ -5,11 +5,14 @@ from db_client import DbClient
 from db_history import DbHistory
 from db_clients_online import DbClientsOnline
 from db_contacts import DbContacts
+from db_stat import DbStat
+
 
 DbClient.metadata.create_all(engine)
 DbHistory.metadata.create_all(engine)
 DbClientsOnline.metadata.create_all(engine)
 DbContacts.metadata.create_all(engine)
+DbStat.metadata.create_all(engine)
 
 
 class ServerStorage:
@@ -67,6 +70,37 @@ class ServerStorage:
                                                                                       isouter=True)
         else:
             stm = select(DbClient.login).join(DbClient, DbHistory.client_id == DbClient.id, isouter=True)
+
+        result = session.execute(stm)
+
+        for row in result:
+            data.append(row)
+
+        return data
+
+    def update_stat(self, sender_id, recipient_id):
+        sender_row = session.query(DbStat).filter(DbStat.client_id == sender_id).limit(1).first()
+        recipient_row = session.query(DbStat).filter(DbStat.client_id == recipient_id).limit(1).first()
+
+        if sender_row:
+            sender_row.sent += 1
+        else:
+            sender = DbStat(sender_id)
+            sender.sent, sender.recv = 1, 0
+            session.add(sender)
+
+        if recipient_row:
+            recipient_row.recv += 1
+        else:
+            recipient = DbStat(recipient_id)
+            recipient.sent, recipient.recv = 0, 1
+            session.add(recipient)
+
+        session.commit()
+
+    def get_stat(self):
+        data = []
+        stm = select(DbClient.login, DbClient.info, DbStat.sent, DbStat.recv).join(DbClient, DbStat.client_id == DbClient.id, isouter=True)
 
         result = session.execute(stm)
 
