@@ -7,6 +7,7 @@ import socket
 import threading
 from datetime import datetime
 
+from PyQt5.QtWidgets import QApplication
 from select import select
 
 from common.variables import (MAX_CONNECTIONS, RESPONSE, ERROR, TIME, USER, ACTION, ACCOUNT_NAME, PRESENCE,
@@ -17,6 +18,7 @@ from common.exceptions import CodeException
 from logs.server_log_config import server_log
 from logs.decorators import log
 from db.server_storage import ServerStorage
+from views.server_gui import ServerGui
 
 
 class ServerVerifier(type):
@@ -405,6 +407,17 @@ class Server(metaclass=ServerVerifier):
         Для потока администрирования
         :return:
         """
+
+        server_app = QApplication(sys.argv)
+        server_gui = ServerGui()
+        server_gui.set_timer(3000)
+        server_gui.show()
+
+        server_gui.statusbar.showMessage('Welcome, admin. SHODAN is waiting you.')
+
+        server_app.exec()
+
+        return
 
         print('Welcome, admin. SHODAN is waiting you.')
 

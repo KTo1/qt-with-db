@@ -44,7 +44,7 @@ class ServerStorage:
         session.commit()
 
     def get_clients_online(self):
-        stm = select(DbClientsOnline.ip_address, DbClientsOnline.info, DbClient.login).join(DbClient,
+        stm = select(DbClientsOnline.ip_address, DbClientsOnline.port, DbClientsOnline.info, DbClient.login).join(DbClient,
                                                                                             DbClientsOnline.client_id == DbClient.id,
                                                                                             isouter=True)
         data = []
