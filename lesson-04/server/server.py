@@ -1,3 +1,4 @@
+import os
 import re
 import dis
 import sys
@@ -5,14 +6,15 @@ import json
 import time
 import socket
 import threading
-from datetime import datetime
+import configparser
 
-from PyQt5.QtWidgets import QApplication
 from select import select
+from datetime import datetime
+from PyQt5.QtWidgets import QApplication
 
 from common.variables import (MAX_CONNECTIONS, RESPONSE, ERROR, TIME, USER, ACTION, ACCOUNT_NAME, PRESENCE,
-                              DEFAULT_PORT, DEFAULT_IP_ADDRESS, MESSAGE, EXIT, TO_USERNAME, USERNAME_SERVER,
-                              USERS_ONLINE, ACTION_GET_CONTACTS, ACTION_ADD_CONTACT, ACTION_DEL_CONTACT, RESPONSE_OK)
+                              MESSAGE, EXIT, TO_USERNAME, USERNAME_SERVER, USERS_ONLINE, ACTION_GET_CONTACTS,
+                              ACTION_ADD_CONTACT, ACTION_DEL_CONTACT, RESPONSE_OK)
 from common.utils import get_message, send_message, parse_cmd_parameter, PortField, result_from_stdout
 from common.exceptions import CodeException
 from logs.server_log_config import server_log
@@ -46,11 +48,12 @@ class Server(metaclass=ServerVerifier):
 
     __listen_port = PortField()
 
-    def __init__(self, listen_address, listen_port):
+    def __init__(self, listen_address, listen_port, config_file_path):
         self.__clients_online_db = {}
         self.__listen_address = listen_address
         self.__listen_port = listen_port
         self.__storage = ServerStorage()
+        self.__config_file_path = config_file_path
 
 # region protocol
 
@@ -409,11 +412,12 @@ class Server(metaclass=ServerVerifier):
         """
 
         server_app = QApplication(sys.argv)
-        server_gui = ServerGui()
+
+        server_gui = ServerGui(self.__config_file_path)
         server_gui.set_timer(3000)
         server_gui.show()
 
-        server_gui.statusbar.showMessage('Welcome, admin. SHODAN is waiting you.')
+        server_gui.status_message('Welcome, admin. SHODAN is waiting you.')
 
         server_app.exec()
 
@@ -468,13 +472,21 @@ class Server(metaclass=ServerVerifier):
 
 
 if __name__ == '__main__':
-    listen_address = parse_cmd_parameter('-a', sys.argv, DEFAULT_IP_ADDRESS,
+
+    config = configparser.ConfigParser()
+    dir_path = os.path.dirname(os.path.relpath(__file__))
+    config_file_path = os.path.join(dir_path, 'settings.ini')
+    config.read(config_file_path)
+
+    listen_address = parse_cmd_parameter('-a', sys.argv, config['SETTINGS']['default_address'],
                                          'После параметра \'a\'- необходимо указать адрес, который будет слушать сервер.')
-    listen_port = parse_cmd_parameter('-p', sys.argv, DEFAULT_PORT,
+    listen_port = parse_cmd_parameter('-p', sys.argv, config['SETTINGS']['default_port'],
                                       'После параметра -\'p\' необходимо указать номер порта.')
+
+    listen_port = int(listen_port)
 
     if listen_port is None or listen_address is None:
         raise ValueError('Неверно заданы параметры командной строки')
 
-    server = Server(listen_address, int(listen_port))
+    server = Server(listen_address, int(listen_port), config_file_path)
     server.run()
