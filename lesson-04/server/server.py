@@ -101,7 +101,7 @@ class Server(metaclass=ServerVerifier):
         """
 
         message = self.create_common_message(200, response[MESSAGE][USER][ACCOUNT_NAME])
-        message[MESSAGE] = 'enter, and say hi all!'
+        message[MESSAGE] = 'OK'
 
         return message
 

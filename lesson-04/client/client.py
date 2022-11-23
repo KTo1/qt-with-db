@@ -148,14 +148,10 @@ class Client(metaclass=ClientVerifier):
             return ''
 
         if RESPONSE in answer:
-            if answer[RESPONSE] in [200, 300]:
-                return f'{answer[RESPONSE]}: OK', ''
+            if TIME in answer:
+                answer[TIME] = time.strftime('%d.%m.%Y %H:%M', time.localtime(answer[TIME]))
 
-            if answer[RESPONSE] in [201, 202, 203, 204, 205]:
-                time_string = time.strftime('%d.%m.%Y %H:%M', time.localtime(answer[TIME]))
-                return f'<{time_string}> {answer[USER]}: {answer[MESSAGE]}', answer[USER]
-
-            return f'400 : {answer[ERROR]}', ''
+            return answer
 
         raise ValueError
 
@@ -231,7 +227,7 @@ class Client(metaclass=ClientVerifier):
 
             if to_username and not to_username == user_name:
                 message = msg.replace(to_username, '')
-                self.add_message(user_name, to_username, message)
+                self.add_message(user_name, to_username.replace('/', ''), message)
                 send_message(transport, self.create_message(message, user_name, to_username))
 
     def recv_messages(self, transport):
@@ -242,12 +238,12 @@ class Client(metaclass=ClientVerifier):
         """
 
         while True:
-            answer, user_name = self.process_answer(get_message(transport))
+            answer = self.process_answer(get_message(transport))
             if answer:
                 print()
                 print('Сообщение от сервера: ')
-                print(answer)
-                self.add_message(user_name, self.__user_name, answer)
+                print(f'<{answer[TIME]}> {answer[USER]}: {answer[MESSAGE]}')
+                self.add_message(answer[USER], self.__user_name, answer[MESSAGE])
 
     def run(self):
         """
@@ -268,15 +264,12 @@ class Client(metaclass=ClientVerifier):
         send_message(transport, message)
 
         try:
-            answer, user_name = self.process_answer(get_message(transport))
-            print(answer)
+            answer = self.process_answer(get_message(transport))
+            print(f'{answer[RESPONSE]} : {answer[MESSAGE]}')
 
         except (ValueError, json.JSONDecodeError):
             client_log.exception('Не удалось декодировать сообщение сервера.')
             sys.exit(1)
-
-        if answer == '200':
-            pass
 
         sender = threading.Thread(target=self.send_messages, args=(transport, self.__user_name))
         receiver = threading.Thread(target=self.recv_messages, args=(transport,))
