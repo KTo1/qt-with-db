@@ -10,8 +10,7 @@ class Log():
     """ Декоратор лога классом """
 
     def __init__(self):
-        dir_path, file_name = os.path.split(sys.argv[0])
-        self.__loggi = client_log if file_name == 'client.py' else server_log
+        self.__loggi = client_log
 
     def __call__(self, func):
         def wrapper(*args, **kwargs):
@@ -29,8 +28,7 @@ class Log():
 def log(func):
     """ Декоратор лога функцией """
 
-    dir_path, file_name = os.path.split(sys.argv[0])
-    loggi = client_log if file_name == 'client.py' else server_log
+    loggi = client_log
 
     def wrapper(*args, **kwargs):
         from_func_name = traceback.format_stack()[0].strip().split()[-1]

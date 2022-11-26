@@ -401,6 +401,10 @@ class Server(metaclass=ServerVerifier):
 
                                 self.register_client_action(client_name, 'del contact', str(client_address))
                                 message_pool.append((client_socket, self.create_del_contact_answer()))
+                    except ConnectionResetError as e:
+                        server_log.exception(f'Произошла ошибка: {str(e)}')
+                        clients_sockets.remove(client_socket)
+                        client_socket.close()
 
                     except (ValueError, json.JSONDecodeError):
                         server_log.exception('Принято некорректное сообщение от клиента')

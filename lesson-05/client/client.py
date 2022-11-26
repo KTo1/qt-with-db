@@ -13,6 +13,7 @@ from common.variables import (DEFAULT_PORT, DEFAULT_IP_ADDRESS, ACTION, PRESENCE
                               ACTION_GET_CONTACTS, ACTION_ADD_CONTACT, ACTION_DEL_CONTACT)
 from common.utils import get_message, send_message, parse_cmd_parameter, PortField, result_from_stdout
 from common.exceptions import CodeException
+from common.transport import Transport
 from logs.client_log_config import client_log
 from logs.decorators import log
 from db.client_storage import ClientStorage
@@ -53,11 +54,13 @@ class Client(metaclass=ClientVerifier):
 
     __server_port = PortField()
 
-    def __init__(self, server_address, server_port, user_name):
+    def __init__(self, server_address, server_port, client_name):
         self.__server_address = server_address
         self.__server_port = server_port
-        self.__user_name = user_name
+        self.__client_name = client_name
         self.__storage = ClientStorage()
+        self.__storage = ClientStorage()
+        self.__transport = Transport(server_address, server_port, client_name)
 
 # region protocol
 
@@ -114,18 +117,18 @@ class Client(metaclass=ClientVerifier):
 
         return self.create_common_message(account_name, EXIT)
 
-    def create_message(self, message, account_name, to_username):
+    def create_message(self, message, account_name, to_clientname):
         """
         Функция генерирует запрос о сообщении клиента
         :param message:
         :param account_name:
-        :param to_username:
+        :param to_clientname:
         :return:
         """
 
         result = self.create_common_message(account_name, MESSAGE)
         result[MESSAGE] = message
-        result[TO_USERNAME] = to_username
+        result[TO_USERNAME] = to_clientname
 
         return result
 
@@ -187,21 +190,21 @@ class Client(metaclass=ClientVerifier):
         # оставил с / чтобы удобно было копировать
         return command.split()[0]
 
-    def send_messages(self, transport, user_name):
+    def send_messages(self, transport, client_name):
         """
         Для потока записи сообщений
         :param transport:
-        :param user_name:
+        :param client_name:
         :return:
         """
 
         while True:
-            msg = input(f'<{user_name}> Введите непустое сообщение (/help - помощь): ')
+            msg = input(f'<{client_name}> Введите непустое сообщение (/help - помощь): ')
             if not msg:
                 continue
 
             if msg == '/exit' or msg == '.учше':
-                send_message(transport, self.create_exit_message(user_name))
+                send_message(transport, self.create_exit_message(client_name))
                 print('Bye!')
                 time.sleep(2)
                 break
@@ -211,28 +214,28 @@ class Client(metaclass=ClientVerifier):
                 continue
 
             if msg == '/contacts' or msg == '.сщтефсеы':
-                send_message(transport, self.create_contacts_request(user_name))
+                send_message(transport, self.create_contacts_request(client_name))
                 continue
 
             if msg.startswith('/contact'):
                 command = msg.split()[1]
                 contact_name = msg.split()[2]
                 if command == 'add':
-                    send_message(transport, self.create_add_contacts_message(user_name, contact_name))
+                    send_message(transport, self.create_add_contacts_message(client_name, contact_name))
                 else:
-                    send_message(transport, self.create_del_contacts_message(user_name, contact_name))
+                    send_message(transport, self.create_del_contacts_message(client_name, contact_name))
                 continue
 
             if msg == '/online' or msg == '.щтдшту':
-                send_message(transport, self.create_online_request(user_name))
+                send_message(transport, self.create_online_request(client_name))
                 continue
 
-            to_username = self.get_username_from_msg(msg)
+            to_clientname = self.get_username_from_msg(msg)
 
-            if to_username and not to_username == user_name:
-                message = msg.replace(to_username, '')
-                self.add_message(user_name, to_username.replace('/', ''), message)
-                send_message(transport, self.create_message(message, user_name, to_username))
+            if to_clientname and not to_clientname == client_name:
+                message = msg.replace(to_clientname, '')
+                self.add_message(client_name, to_clientname.replace('/', ''), message)
+                send_message(transport, self.create_message(message, client_name, to_clientname))
 
     def recv_messages(self, transport):
         """
@@ -247,7 +250,16 @@ class Client(metaclass=ClientVerifier):
                 print()
                 print('Сообщение от сервера: ')
                 print(f'<{answer[TIME]}> {answer[USER]}: {answer[MESSAGE]}')
-                self.add_message(answer[USER], self.__user_name, answer[MESSAGE])
+                self.add_message(answer[USER], self.__client_name, answer[MESSAGE])
+
+    def process_gui(self):
+        client_app = QApplication(sys.argv)
+
+        client_gui = ClientGui()
+        client_gui.show()
+        client_gui.status_message('Welcome, admin. SHODAN is waiting you.')
+
+        client_app.exec_()
 
     def run(self):
         """
@@ -257,38 +269,32 @@ class Client(metaclass=ClientVerifier):
         Пример: client.py -u Guest -p 8888 -a 127.0.0.1
         """
 
-        transport = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            transport.connect((self.__server_address, self.__server_port))
-        except ConnectionRefusedError as e:
-            client_log.exception(str(e))
-            sys.exit(1)
+        self.__transport.connect()
+        self.__transport.setDaemon(True)
+        self.__transport.start()
 
-        message = self.create_presence(self.__user_name)
-        send_message(transport, message)
+        self.process_gui()
 
-        try:
-            answer = self.process_answer(get_message(transport))
-            print(f'{answer[RESPONSE]} : {answer[MESSAGE]}')
+        self.__transport.transport_shutdown()
+        self.__transport.join()
 
-        except (ValueError, json.JSONDecodeError):
-            client_log.exception('Не удалось декодировать сообщение сервера.')
-            sys.exit(1)
-
-        sender = threading.Thread(target=self.send_messages, args=(transport, self.__user_name))
-        receiver = threading.Thread(target=self.recv_messages, args=(transport,))
-
-        sender.daemon = True
-        receiver.daemon = True
-
-        sender.start()
-        receiver.start()
-
-        while True:
-            time.sleep(1)
-            if sender.is_alive() and receiver.is_alive():
-                continue
-            break
+        # sender = threading.Thread(target=self.send_messages, args=(transport, self.__user_name))
+        # receiver = threading.Thread(target=self.recv_messages, args=(transport,))
+        # gui = threading.Thread(target=self.process_gui)
+        #
+        # # sender.daemon = True
+        # # receiver.daemon = True
+        # gui.daemon = True
+        #
+        # # sender.start()
+        # # receiver.start()
+        # gui.start()
+        #
+        # while True:
+        #     time.sleep(1)
+        #     if receiver.is_alive() and gui.is_alive():
+        #         continue
+        #     break
 
 
 if __name__ == '__main__':
@@ -297,20 +303,20 @@ if __name__ == '__main__':
                                          'После параметра \'a\'- необходимо указать адрес, который будет слушать сервер.')
     server_port = parse_cmd_parameter('-p', sys.argv, DEFAULT_PORT,
                                       'После параметра -\'p\' необходимо указать номер порта.')
-    user_name = parse_cmd_parameter('-u', sys.argv, '',
+    client_name = parse_cmd_parameter('-u', sys.argv, '',
                                     'После параметра -\'u\' необходимо указать имя пользователя.')
 
-    if server_port is None or server_address is None or user_name is None:
+    if server_port is None or server_address is None or client_name is None:
         raise ValueError('Неверно заданы параметры командной строки')
 
     # process parameter
-    server_port1 = int(server_port)
+    server_port = int(server_port)
 
-    # Создаём клиентcкое приложение
+    # Создаём клиентское приложение
     client_app = QApplication(sys.argv)
 
     # Если имя пользователя не было указано в командной строке то запросим его
-    if not user_name:
+    if not client_name:
         start_dialog = NicknameForm()
         start_dialog.show()
         client_app.exec_()
@@ -322,5 +328,5 @@ if __name__ == '__main__':
         else:
             exit(0)
 
-    client = Client(server_address, server_port1, user_name)
+    client = Client(server_address, server_port, client_name)
     client.run()
