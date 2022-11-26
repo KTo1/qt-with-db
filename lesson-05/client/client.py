@@ -6,14 +6,18 @@ import time
 import socket
 import threading
 
+from PyQt5.QtWidgets import QApplication
+
 from common.variables import (DEFAULT_PORT, DEFAULT_IP_ADDRESS, ACTION, PRESENCE, TIME, USER,
-                              ACCOUNT_NAME, RESPONSE, ERROR, DEFAULT_USER, MESSAGE, EXIT, TO_USERNAME, USERS_ONLINE,
+                              ACCOUNT_NAME, RESPONSE, ERROR, MESSAGE, EXIT, TO_USERNAME, USERS_ONLINE,
                               ACTION_GET_CONTACTS, ACTION_ADD_CONTACT, ACTION_DEL_CONTACT)
 from common.utils import get_message, send_message, parse_cmd_parameter, PortField, result_from_stdout
 from common.exceptions import CodeException
 from logs.client_log_config import client_log
 from logs.decorators import log
 from db.client_storage import ClientStorage
+from views.nickname import NicknameForm
+from views.client_gui import ClientGui
 
 
 class ClientVerifier(type):
@@ -293,7 +297,7 @@ if __name__ == '__main__':
                                          'После параметра \'a\'- необходимо указать адрес, который будет слушать сервер.')
     server_port = parse_cmd_parameter('-p', sys.argv, DEFAULT_PORT,
                                       'После параметра -\'p\' необходимо указать номер порта.')
-    user_name = parse_cmd_parameter('-u', sys.argv, DEFAULT_USER,
+    user_name = parse_cmd_parameter('-u', sys.argv, '',
                                     'После параметра -\'u\' необходимо указать имя пользователя.')
 
     if server_port is None or server_address is None or user_name is None:
@@ -301,6 +305,22 @@ if __name__ == '__main__':
 
     # process parameter
     server_port1 = int(server_port)
+
+    # Создаём клиентcкое приложение
+    client_app = QApplication(sys.argv)
+
+    # Если имя пользователя не было указано в командной строке то запросим его
+    if not user_name:
+        start_dialog = NicknameForm()
+        start_dialog.show()
+        client_app.exec_()
+
+        # Если пользователь ввёл имя и нажал ОК, то сохраняем ведённое и удаляем объект, инааче выходим
+        if start_dialog.ok_pressed:
+            client_name = start_dialog.lineEdit_nickname.text()
+            del start_dialog
+        else:
+            exit(0)
 
     client = Client(server_address, server_port1, user_name)
     client.run()
