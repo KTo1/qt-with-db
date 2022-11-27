@@ -6,8 +6,8 @@ DbMessages.metadata.create_all(engine)
 
 class ClientStorage:
 
-    def add_message(self, login_from, login_to, message):
-        message = DbMessages(login_from, login_to, message)
+    def add_message(self, date_action, login_from, login_to, message):
+        message = DbMessages(date_action, login_from, login_to, message)
         session.add(message)
         session.commit()
 
