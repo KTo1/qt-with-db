@@ -108,10 +108,10 @@ class ClientGui(QMainWindow, FORM_CLASS):
             self.pushButton_send.setDisabled(False)
             self.textEdit_message.setDisabled(False)
 
-            self.update_history()
+            self.update_history(self.__chat_with)
 
-    def update_history(self):
-        messages = self.__storage.get_messages(20)
+    def update_history(self, contact):
+        messages = self.__storage.get_messages(contact, 20)
 
         self.__table_messages_model.clear()
 
@@ -151,34 +151,23 @@ class ClientGui(QMainWindow, FORM_CLASS):
         except (ConnectionResetError, ConnectionAbortedError):
             self.status_message('Ошибка, потеряно соединение с сервером!')
         else:
-            self.update_history()
+            self.update_history(self.__chat_with)
 
     # Слот приёма нового сообщений
     @pyqtSlot(str)
     def new_message(self, sender):
 
         if sender == self.__chat_with:
-            self.update_history()
+            self.update_history(self.__chat_with)
         else:
-            pass
-        #     # Проверим есть ли такой пользователь у нас в контактах:
-        #     if self.database.check_contact(sender):
-        #         # Если есть, спрашиваем и желании открыть с ним чат и открываем при желании
-        #         if self.messages.question(self, 'Новое сообщение', \
-        #                                   f'Получено новое сообщение от {sender}, открыть чат с ним?', QMessageBox.Yes,
-        #                                   QMessageBox.No) == QMessageBox.Yes:
-        #             self.current_chat = sender
-        #             self.set_active_user()
-        #     else:
-        #         print('NO')
-        #         # Раз нету,спрашиваем хотим ли добавить юзера в контакты.
-        #         if self.messages.question(self, 'Новое сообщение', \
-        #                                   f'Получено новое сообщение от {sender}.\n Данного пользователя нет в вашем контакт-листе.\n Добавить в контакты и открыть чат с ним?',
-        #                                   QMessageBox.Yes,
-        #                                   QMessageBox.No) == QMessageBox.Yes:
-        #             self.add_contact(sender)
-        #             self.current_chat = sender
-        #             self.set_active_user()
+            find_contacts = self.__table_contacts_model.findItems(sender)
+            if find_contacts:
+                find_contacts[0].setBackground(QBrush(self.__color_green))
+            else:
+                add_contact = QStandardItem(sender)
+                add_contact.setEditable(False)
+                add_contact.setBackground(QBrush(self.__color_red))
+                self.__table_contacts_model.appendRow([add_contact])
 
     # Слот потери соединения
     @pyqtSlot()
