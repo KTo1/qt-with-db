@@ -1,4 +1,5 @@
 import sys
+import time
 
 from PyQt5.QtWidgets import QApplication
 
@@ -47,7 +48,7 @@ class Client():
     def process_gui(self):
         client_app = QApplication(sys.argv)
 
-        client_gui = ClientGui(self.__transport)
+        client_gui = ClientGui(self.__transport, self.__storage)
         client_gui.show()
         client_gui.status_message('Welcome, admin. SHODAN is waiting you.')
 
@@ -66,6 +67,8 @@ class Client():
         self.__transport.start()
 
         self.process_gui()
+
+        time.sleep(2)
 
         self.__transport.shutdown()
         self.__transport.join()

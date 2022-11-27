@@ -4,7 +4,7 @@ import time
 from PyQt5 import uic
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
-from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtWidgets import QMainWindow, QMessageBox
 from .add_contact import AddContactForm
 
 
@@ -13,14 +13,20 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'client_g
 
 class ClientGui(QMainWindow, FORM_CLASS):
 
-    def __init__(self, transport):
+    def __init__(self, transport, storage):
         super(ClientGui, self).__init__()
 
         self.__transport = transport
+        self.__storage = storage
+
         self.__table_contacts_model = QStandardItemModel()
+        self.__table_messages_model = QStandardItemModel()
+        self.__chat_with = ''
+        self.__messages = QMessageBox()
 
         self.setupUi(self)
         self.initUi()
+
         self.update_contacts_list()
 
     def initUi(self):
@@ -36,6 +42,7 @@ class ClientGui(QMainWindow, FORM_CLASS):
         self.table_contacts.horizontalHeader().hide()
         self.table_contacts.horizontalHeader().setStretchLastSection(True)
         self.table_contacts.verticalHeader().hide()
+        self.table_contacts.doubleClicked.connect(self.select_dialog)
 
     def update_contacts_list(self):
         self.__table_contacts_model.clear()
@@ -61,14 +68,38 @@ class ClientGui(QMainWindow, FORM_CLASS):
         self.update_contacts_list()
 
     def del_contact(self):
+
+        if self.__messages.question(self, 'Удаление контакта', 'Вы уверены?', QMessageBox.Yes,
+                                  QMessageBox.No) == QMessageBox.No:
+            return
+
         select = self.table_contacts.selectionModel()
         if select.hasSelection():
             current_index = self.table_contacts.selectionModel().currentIndex()
             contact = self.__table_contacts_model.data(current_index)
             self.__transport.del_contact(contact)
             self.update_contacts_list()
+
+            if self.__chat_with == contact:
+                self.label_chat.setText(f'Чат с:  <>')
+                self.pushButton_clear.setDisabled(True)
+                self.pushButton_send.setDisabled(True)
+
         else:
             self.status_message('Выберите пользователя из списка.')
+
+    def select_dialog(self):
+        if self.table_contacts.currentIndex().isValid():
+            self.__chat_with = self.table_contacts.currentIndex().data()
+
+            self.label_chat.setText(f'Чат с:  <{self.__chat_with}>')
+            self.pushButton_clear.setDisabled(False)
+            self.pushButton_send.setDisabled(False)
+
+            self.update_history()
+
+    def update_history(self):
+        pass
 
     def clear_message(self):
         pass
@@ -77,6 +108,4 @@ class ClientGui(QMainWindow, FORM_CLASS):
         pass
 
     def closeEvent(self, event):
-        self.status_message('Выход')
-        time.sleep(2)
         event.accept()
