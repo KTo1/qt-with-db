@@ -69,6 +69,12 @@ class ClientGui(QMainWindow, FORM_CLASS):
 
     def add_contact_click(self):
         clients_list = self.__transport.get_clients_list()
+        contact_list = self.__transport.get_contacts_list()
+
+        clients_list.remove(self.__client_name)
+
+        clients_list = list(set(clients_list) - set(contact_list))
+
         self.__add_contact_form.set_clients_list(clients_list)
         self.__add_contact_form.show()
 
