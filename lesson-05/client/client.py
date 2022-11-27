@@ -34,8 +34,9 @@ class Client():
         client_app = QApplication(sys.argv)
 
         client_gui = ClientGui(self.__transport, self.__storage, self.__client_name)
+        client_gui.make_connection(self.__transport)
         client_gui.show()
-        client_gui.status_message('Welcome, admin. SHODAN is waiting you.')
+        client_gui.status_message('Connected')
 
         client_app.exec_()
 

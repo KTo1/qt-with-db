@@ -1,9 +1,8 @@
 import os
-import time
 
 from PyQt5 import uic
-from PyQt5.QtCore import QTimer
-from PyQt5.QtGui import QStandardItemModel, QStandardItem
+from PyQt5.QtCore import pyqtSlot, Qt
+from PyQt5.QtGui import QStandardItemModel, QStandardItem, QBrush, QColor
 from PyQt5.QtWidgets import QMainWindow, QMessageBox
 from .add_contact import AddContactForm
 
@@ -25,6 +24,9 @@ class ClientGui(QMainWindow, FORM_CLASS):
 
         self.__chat_with = ''
         self.__messages = QMessageBox()
+
+        self.__color_red = QColor(255, 213, 213)
+        self.__color_green = QColor(204, 255, 204)
 
         self.setupUi(self)
         self.initUi()
@@ -48,6 +50,9 @@ class ClientGui(QMainWindow, FORM_CLASS):
         self.table_contacts.doubleClicked.connect(self.select_dialog)
 
         self.table_messages.setModel(self.__table_messages_model)
+        self.table_messages.horizontalHeader().hide()
+        self.table_messages.horizontalHeader().setStretchLastSection(True)
+        self.table_messages.verticalHeader().hide()
 
     def update_contacts_list(self):
         self.__table_contacts_model.clear()
@@ -106,14 +111,83 @@ class ClientGui(QMainWindow, FORM_CLASS):
             self.update_history()
 
     def update_history(self):
-        pass
+        messages = self.__storage.get_messages(20)
+
+        self.__table_messages_model.clear()
+
+        # Заполнение модели записями, так-же стоит разделить входящие и исходящие выравниванием и разным фоном.
+        # Записи в обратном порядке, поэтому выбираем их с конца и не более 20
+        for mes in messages:
+            row = QStandardItem(f'{mes.date_action.replace(microsecond=0)}:\n {mes.message}')
+            row.setEditable(False)
+
+            if mes.login_from == self.__client_name:
+                row.setBackground(QBrush(self.__color_red))
+                row.setTextAlignment(Qt.AlignRight)
+            else:
+                row.setBackground(QBrush(self.__color_green))
+                row.setTextAlignment(Qt.AlignLeft)
+
+            self.__table_messages_model.appendRow(row)
+
+        self.table_messages.scrollToBottom()
 
     def clear_message(self):
         self.__table_messages_model.clear()
 
     def send_message(self):
         message = self.textEdit_message.toPlainText()
-        self.__transport.send_message(message, self.__client_name, self.__chat_with)
+
+        if not message:
+            return
+        try:
+            self.__transport.send_message(self.__client_name, self.__chat_with, message)
+            pass
+        except OSError as err:
+            if err.errno:
+                self.status_message('Ошибка, потеряно соединение с сервером!')
+                self.close()
+            self.status_message('Ошибка, таймаут соединения!')
+        except (ConnectionResetError, ConnectionAbortedError):
+            self.status_message('Ошибка, потеряно соединение с сервером!')
+        else:
+            self.update_history()
+
+    # Слот приёма нового сообщений
+    @pyqtSlot(str)
+    def new_message(self, sender):
+
+        if sender == self.__chat_with:
+            self.update_history()
+        else:
+            pass
+        #     # Проверим есть ли такой пользователь у нас в контактах:
+        #     if self.database.check_contact(sender):
+        #         # Если есть, спрашиваем и желании открыть с ним чат и открываем при желании
+        #         if self.messages.question(self, 'Новое сообщение', \
+        #                                   f'Получено новое сообщение от {sender}, открыть чат с ним?', QMessageBox.Yes,
+        #                                   QMessageBox.No) == QMessageBox.Yes:
+        #             self.current_chat = sender
+        #             self.set_active_user()
+        #     else:
+        #         print('NO')
+        #         # Раз нету,спрашиваем хотим ли добавить юзера в контакты.
+        #         if self.messages.question(self, 'Новое сообщение', \
+        #                                   f'Получено новое сообщение от {sender}.\n Данного пользователя нет в вашем контакт-листе.\n Добавить в контакты и открыть чат с ним?',
+        #                                   QMessageBox.Yes,
+        #                                   QMessageBox.No) == QMessageBox.Yes:
+        #             self.add_contact(sender)
+        #             self.current_chat = sender
+        #             self.set_active_user()
+
+    # Слот потери соединения
+    @pyqtSlot()
+    def connection_lost(self):
+        self.status_message('Сбой соединения, потеряно соединение с сервером. ')
+
+    def make_connection(self, trans_obj):
+        trans_obj.new_message.connect(self.new_message)
+        trans_obj.connection_lost.connect(self.connection_lost)
 
     def closeEvent(self, event):
         event.accept()

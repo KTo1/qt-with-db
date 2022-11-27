@@ -16,8 +16,8 @@ socket_lock = threading.Lock()
 
 
 class Transport(threading.Thread, QObject):
-    __new_message = pyqtSignal(str)
-    __connection_lost = pyqtSignal()
+    new_message = pyqtSignal(str)
+    connection_lost = pyqtSignal()
 
     def __init__(self, server_address, server_port, client_name):
         threading.Thread.__init__(self)
@@ -118,7 +118,7 @@ class Transport(threading.Thread, QObject):
 
         return self.create_common_message(account_name, EXIT)
 
-    def create_message(self, message, account_name, to_clientname):
+    def create_message(self, account_name, to_clientname, message):
         """
         Функция генерирует запрос о сообщении клиента
         :param message:
@@ -154,6 +154,8 @@ class Transport(threading.Thread, QObject):
             elif answer[RESPONSE] == 201:
                 # TODO по хорошему думаю тут стоит использовать время сервера
                 self.__storage.add_message(datetime.now(), answer[USER], self.__client_name, answer[MESSAGE])
+                self.new_message.emit(answer[USER])
+                return answer
             else:
                 return answer
 
@@ -161,10 +163,10 @@ class Transport(threading.Thread, QObject):
 
 # endregion
 
-    def send_message(self, message, account_name, to_clientname):
+    def send_message(self, account_name, to_clientname, message):
         # TODO по хорошему думаю тут стоит использовать время сервера
-        self.__storage.add_message(datetime.now(), message, account_name, to_clientname)
-        send_message(self.__transport, self.create_message(message, account_name, to_clientname))
+        self.__storage.add_message(datetime.now(), account_name, to_clientname, message)
+        send_message(self.__transport, self.create_message(account_name, to_clientname, message))
 
     def get_contacts_list(self):
         with socket_lock:
@@ -207,13 +209,13 @@ class Transport(threading.Thread, QObject):
                     if err.errno:
                         self.__logger.critical(f'Потеряно соединение с сервером.')
                         self.__running = False
-                        self.__connection_lost.emit()
+                        self.connection_lost.emit()
 
                 # Проблемы с соединением
                 except (ConnectionError, ConnectionAbortedError, ConnectionResetError, json.JSONDecodeError, TypeError):
                     self.__logger.debug(f'Потеряно соединение с сервером.')
                     self.__running = False
-                    self.__connection_lost.emit()
+                    self.connection_lost.emit()
                 # Если сообщение получено, то вызываем функцию обработчик:
                 else:
                     self.__logger.debug(f'Принято сообщение с сервера: {message}')

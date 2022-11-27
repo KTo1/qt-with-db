@@ -15,8 +15,17 @@ class ClientStorage:
     def del_message(self):
         pass
 
-    def get_messages(self):
-        data = session.query(DbMessages).all()
+    def get_messages(self, limit):
+        data = []
+
+        if limit:
+            stm = session.query(DbMessages).order_by(DbMessages.date_action).limit(limit).all()
+        else:
+            stm = session.query(DbMessages).order_by(DbMessages.date_action).all()
+
+        for row in stm:
+            data.append(row)
+
         return data
 
 
