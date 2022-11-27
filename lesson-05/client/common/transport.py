@@ -5,7 +5,7 @@ import socket
 import threading
 
 from PyQt5.QtCore import pyqtSignal, QObject
-from .utils import send_message, get_message, result_from_stdout
+from .utils import send_message, get_message
 from .variables import (TIME, USER, RESPONSE, MESSAGE, ACTION, ACCOUNT_NAME, ACTION_GET_CONTACTS, ACTION_ADD_CONTACT,
                         TO_USERNAME, ACTION_DEL_CONTACT, USERS_ONLINE, PRESENCE, EXIT, ACTION_GET_CLIENTS)
 
@@ -165,8 +165,19 @@ class Transport(threading.Thread, QObject):
 
             return answer[MESSAGE]
 
-    def add_contact(self):
-        pass
+    def add_contact(self, contact_name):
+        with socket_lock:
+            send_message(self.__transport, self.create_add_contacts_message(self.__client_name, contact_name))
+            answer = self.process_answer(get_message(self.__transport))
+
+            return answer[MESSAGE]
+
+    def del_contact(self, contact_name):
+        with socket_lock:
+            send_message(self.__transport, self.create_del_contacts_message(self.__client_name, contact_name))
+            answer = self.process_answer(get_message(self.__transport))
+
+            return answer[MESSAGE]
 
     def run(self) -> None:
         pass

@@ -38,6 +38,8 @@ class ClientGui(QMainWindow, FORM_CLASS):
         self.table_contacts.verticalHeader().hide()
 
     def update_contacts_list(self):
+        self.__table_contacts_model.clear()
+
         clients_list = self.__transport.get_contacts_list()
         for client in clients_list:
             client_field = QStandardItem(client)
@@ -54,11 +56,19 @@ class ClientGui(QMainWindow, FORM_CLASS):
         self.__add_contact_form.show()
 
     def add_contact(self):
-        self.__transport.add
+        contact = self.__add_contact_form.comboBox_contacts.currentText()
+        self.__transport.add_contact(contact)
         self.update_contacts_list()
 
     def del_contact(self):
-        pass
+        select = self.table_contacts.selectionModel()
+        if select.hasSelection():
+            current_index = self.table_contacts.selectionModel().currentIndex()
+            contact = self.__table_contacts_model.data(current_index)
+            self.__transport.del_contact(contact)
+            self.update_contacts_list()
+        else:
+            self.status_message('Выберите пользователя из списка.')
 
     def clear_message(self):
         pass
