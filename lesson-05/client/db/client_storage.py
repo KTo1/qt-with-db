@@ -1,6 +1,7 @@
 from db_connect import session, engine
 from db_messages import DbMessages
 
+
 DbMessages.metadata.create_all(engine)
 
 

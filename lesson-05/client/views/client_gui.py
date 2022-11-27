@@ -13,19 +13,22 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'client_g
 
 class ClientGui(QMainWindow, FORM_CLASS):
 
-    def __init__(self, transport, storage):
+    def __init__(self, transport, storage, client_name):
         super(ClientGui, self).__init__()
 
         self.__transport = transport
         self.__storage = storage
+        self.__client_name = client_name
 
         self.__table_contacts_model = QStandardItemModel()
         self.__table_messages_model = QStandardItemModel()
+
         self.__chat_with = ''
         self.__messages = QMessageBox()
 
         self.setupUi(self)
         self.initUi()
+        self.setWindowTitle(f'Monsterchat client <{self.__client_name}>')
 
         self.update_contacts_list()
 
@@ -43,6 +46,8 @@ class ClientGui(QMainWindow, FORM_CLASS):
         self.table_contacts.horizontalHeader().setStretchLastSection(True)
         self.table_contacts.verticalHeader().hide()
         self.table_contacts.doubleClicked.connect(self.select_dialog)
+
+        self.table_messages.setModel(self.__table_messages_model)
 
     def update_contacts_list(self):
         self.__table_contacts_model.clear()
@@ -84,6 +89,7 @@ class ClientGui(QMainWindow, FORM_CLASS):
                 self.label_chat.setText(f'Чат с:  <>')
                 self.pushButton_clear.setDisabled(True)
                 self.pushButton_send.setDisabled(True)
+                self.textEdit_message.setDisabled(True)
 
         else:
             self.status_message('Выберите пользователя из списка.')
@@ -95,6 +101,7 @@ class ClientGui(QMainWindow, FORM_CLASS):
             self.label_chat.setText(f'Чат с:  <{self.__chat_with}>')
             self.pushButton_clear.setDisabled(False)
             self.pushButton_send.setDisabled(False)
+            self.textEdit_message.setDisabled(False)
 
             self.update_history()
 
@@ -102,10 +109,11 @@ class ClientGui(QMainWindow, FORM_CLASS):
         pass
 
     def clear_message(self):
-        pass
+        self.__table_messages_model.clear()
 
     def send_message(self):
-        pass
+        message = self.textEdit_message.toPlainText()
+        self.__transport.send_message(message, self.__client_name, self.__chat_with)
 
     def closeEvent(self, event):
         event.accept()

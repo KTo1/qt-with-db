@@ -30,25 +30,10 @@ class Client():
         self.__transport.set_logger(client_log)
         self.__transport.set_storage(ClientStorage())
 
-    # def recv_messages(self, transport):
-    #     """
-    #     Для потока чтения сообщений
-    #     :param transport:
-    #     :return:
-    #     """
-    #
-    #     while True:
-    #         answer = self.process_answer(get_message(transport))
-    #         if answer:
-    #             print()
-    #             print('Сообщение от сервера: ')
-    #             print(f'<{answer[TIME]}> {answer[USER]}: {answer[MESSAGE]}')
-    #             self.add_message(answer[USER], self.__client_name, answer[MESSAGE])
-
     def process_gui(self):
         client_app = QApplication(sys.argv)
 
-        client_gui = ClientGui(self.__transport, self.__storage)
+        client_gui = ClientGui(self.__transport, self.__storage, self.__client_name)
         client_gui.show()
         client_gui.status_message('Welcome, admin. SHODAN is waiting you.')
 

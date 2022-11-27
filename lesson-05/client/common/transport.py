@@ -4,18 +4,20 @@ import time
 import socket
 import threading
 
+from datetime import datetime
 from PyQt5.QtCore import pyqtSignal, QObject
 from .utils import send_message, get_message
 from .variables import (TIME, USER, RESPONSE, MESSAGE, ACTION, ACCOUNT_NAME, ACTION_GET_CONTACTS, ACTION_ADD_CONTACT,
-                        TO_USERNAME, ACTION_DEL_CONTACT, USERS_ONLINE, PRESENCE, EXIT, ACTION_GET_CLIENTS)
+                        TO_USERNAME, ACTION_DEL_CONTACT, USERS_ONLINE, PRESENCE, EXIT, ACTION_GET_CLIENTS, ERROR)
+from .exceptions import ServerException
 
 
 socket_lock = threading.Lock()
 
 
 class Transport(threading.Thread, QObject):
-    new_message = pyqtSignal(str)
-    connection_lost = pyqtSignal()
+    __new_message = pyqtSignal(str)
+    __connection_lost = pyqtSignal()
 
     def __init__(self, server_address, server_port, client_name):
         threading.Thread.__init__(self)
@@ -28,7 +30,7 @@ class Transport(threading.Thread, QObject):
         self.__logger = None
         self.__transport = None
 
-        self.running = True
+        self.__running = True
 
     def set_logger(self, logger):
         self.__logger = logger
@@ -145,11 +147,24 @@ class Transport(threading.Thread, QObject):
             if TIME in answer:
                 answer[TIME] = time.strftime('%d.%m.%Y %H:%M', time.localtime(answer[TIME]))
 
-            return answer
+            if answer[RESPONSE] == 200:
+                return answer
+            elif answer[RESPONSE] == 400:
+                raise ServerException(f'{answer[ERROR]}')
+            elif answer[RESPONSE] == 201:
+                # TODO по хорошему думаю тут стоит использовать время сервера
+                self.__storage.add_message(datetime.now(), answer[USER], self.__client_name, answer[MESSAGE])
+            else:
+                return answer
 
         raise ValueError
 
 # endregion
+
+    def send_message(self, message, account_name, to_clientname):
+        # TODO по хорошему думаю тут стоит использовать время сервера
+        self.__storage.add_message(datetime.now(), message, account_name, to_clientname)
+        send_message(self.__transport, self.create_message(message, account_name, to_clientname))
 
     def get_contacts_list(self):
         with socket_lock:
@@ -180,4 +195,28 @@ class Transport(threading.Thread, QObject):
             return answer[MESSAGE]
 
     def run(self) -> None:
-        pass
+        while self.__running:
+            # Отдыхаем секунду и снова пробуем захватить сокет.
+            # если не сделать тут задержку, то отправка может достаточно долго ждать освобождения сокета.
+            time.sleep(1)
+            with socket_lock:
+                try:
+                    self.__transport.settimeout(0.5)
+                    message = get_message(self.__transport)
+                except OSError as err:
+                    if err.errno:
+                        self.__logger.critical(f'Потеряно соединение с сервером.')
+                        self.__running = False
+                        self.__connection_lost.emit()
+
+                # Проблемы с соединением
+                except (ConnectionError, ConnectionAbortedError, ConnectionResetError, json.JSONDecodeError, TypeError):
+                    self.__logger.debug(f'Потеряно соединение с сервером.')
+                    self.__running = False
+                    self.__connection_lost.emit()
+                # Если сообщение получено, то вызываем функцию обработчик:
+                else:
+                    self.__logger.debug(f'Принято сообщение с сервера: {message}')
+                    self.process_answer(message)
+                finally:
+                    self.__transport.settimeout(5)
