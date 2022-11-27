@@ -59,7 +59,10 @@ class ServerStorage:
         return data
 
     def get_register_clients(self):
-        data = session.query(DbClient).all()
+        data = []
+        stm = session.query(DbClient.login).all()
+        for row in stm:
+            data.append(row.login)
         return data
 
     def get_history(self, client_id):
@@ -137,7 +140,7 @@ class ServerStorage:
         result = session.execute(stm)
 
         for row in result:
-            data.append(row)
+            data.append(row.login)
 
         return data
 

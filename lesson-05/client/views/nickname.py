@@ -6,6 +6,7 @@ from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PyQt5.QtWidgets import QMainWindow, QDialog, qApp
 
+
 FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'nickname.ui'))
 
 

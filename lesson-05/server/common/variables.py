@@ -14,6 +14,7 @@ USER = 'user'
 ACCOUNT_NAME = 'account_name'
 
 ACTION_GET_CONTACTS = 'get_contacts'
+ACTION_GET_CLIENTS = 'get_clients'
 ACTION_ADD_CONTACT = 'add_contact'
 ACTION_DEL_CONTACT = 'del_contact'
 

@@ -14,11 +14,10 @@ from PyQt5.QtWidgets import QApplication
 
 from common.variables import (MAX_CONNECTIONS, RESPONSE, ERROR, TIME, USER, ACTION, ACCOUNT_NAME, PRESENCE,
                               MESSAGE, EXIT, TO_USERNAME, USERNAME_SERVER, USERS_ONLINE, ACTION_GET_CONTACTS,
-                              ACTION_ADD_CONTACT, ACTION_DEL_CONTACT, RESPONSE_OK)
+                              ACTION_ADD_CONTACT, ACTION_DEL_CONTACT, ACTION_GET_CLIENTS, RESPONSE_OK)
 from common.utils import get_message, send_message, parse_cmd_parameter, PortField, result_from_stdout
 from common.exceptions import CodeException
 from logs.server_log_config import server_log
-from logs.decorators import log
 from db.server_storage import ServerStorage
 from views.server_gui import ServerGui
 
@@ -85,6 +84,9 @@ class Server(metaclass=ServerVerifier):
         if ACTION in message and message[ACTION] == ACTION_DEL_CONTACT and TIME in message and USER in message:
             return {RESPONSE: 206, MESSAGE: message}
 
+        if ACTION in message and message[ACTION] == ACTION_GET_CLIENTS and TIME in message and USER in message:
+            return {RESPONSE: 207, MESSAGE: message}
+
         return {
             RESPONSE: 400,
             ERROR: 'Bad Request'
@@ -138,6 +140,13 @@ class Server(metaclass=ServerVerifier):
 
         return message
 
+    def create_get_clients_answer(self):
+        clients = self.__storage.get_register_clients()
+        message = self.create_common_message(207, USERNAME_SERVER)
+        message[MESSAGE] = clients
+
+        return message
+
     def create_client_contacts_answer(self, client_name):
         """
         Генерирует сообщение пользователи онлайн
@@ -147,10 +156,10 @@ class Server(metaclass=ServerVerifier):
 
         message = self.create_common_message(203, USERNAME_SERVER)
 
-        message_text = 'Список пользователей онлайн: \n'
-        message_text += self.get_client_contacts(client_name)
+        client_id = self.__storage.get_client(client_name)
+        contacts = self.__storage.get_contacts(client_id)
 
-        message[MESSAGE] = message_text
+        message[MESSAGE] = contacts
 
         return message
 
@@ -199,23 +208,6 @@ class Server(metaclass=ServerVerifier):
         result = 'Список пользователей онлайн: \n'
         for elem in clients_online:
             result += f'login: {str(elem[2])}, ip: {elem[0]}, info: {elem[1]}' + '\n'
-        return result
-
-    def get_register_clients(self):
-        clients = self.__storage.get_register_clients()
-        result = 'Список зарегистрированных пользователей: \n'
-        for elem in clients:
-            result += str(elem) + '\n'
-        return result
-
-    def get_client_contacts(self, client):
-        # TODO закешировать
-        client_id = self.__storage.get_client(client)
-        contacts = self.__storage.get_contacts(client_id)
-
-        result = 'Список контактов: \n'
-        for elem in contacts:
-            result += str(elem[0]) + '\n'
         return result
 
     def add_client_contact(self, client, contact):
@@ -401,6 +393,13 @@ class Server(metaclass=ServerVerifier):
 
                                 self.register_client_action(client_name, 'del contact', str(client_address))
                                 message_pool.append((client_socket, self.create_del_contact_answer()))
+
+                            # Пока так, 207 это запрос на список клиентов
+                            if response[RESPONSE] == 207 and client_socket in cl_sock_write:
+                                client_name = response[MESSAGE][USER][ACCOUNT_NAME]
+                                self.register_client_action(client_name, 'get clients', str(client_address))
+                                message_pool.append((client_socket, self.create_get_clients_answer()))
+
                     except ConnectionResetError as e:
                         server_log.exception(f'Произошла ошибка: {str(e)}')
                         clients_sockets.remove(client_socket)
@@ -435,34 +434,6 @@ class Server(metaclass=ServerVerifier):
         server_gui.status_message('Welcome, admin. SHODAN is waiting you.')
 
         server_app.exec()
-
-        return
-
-        print('Welcome, admin. SHODAN is waiting you.')
-
-        while True:
-            msg = input(f'Введите команду (/help - помощь): ')
-            if not msg:
-                continue
-
-            if msg == '/stop' or msg == '.ыещз':
-                print('Bye!')
-                time.sleep(2)
-                break
-
-            if msg == '/online' or msg == '.ыещз':
-                print(self.get_clients_online())
-
-            if msg == '/clients' or msg == '.ыещз':
-                print(self.get_register_clients())
-
-            if '/hist' in msg:
-                param = msg.split()
-                client_name = param[1] if len(param) > 1 else ''
-                print(self.get_history(client_name))
-
-            if msg == '/help' or msg == '.рудз':
-                self.__print_help()
 
     def run(self):
         """
