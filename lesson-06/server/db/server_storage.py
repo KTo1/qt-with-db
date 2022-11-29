@@ -21,16 +21,29 @@ class ServerStorage:
         data = session.query(DbClient).filter(DbClient.login == client_login).limit(1).first()
         return data.id if data else 0
 
-    def add_client(self, client, info=''):
-        client = DbClient(client, info)
+    def add_client(self, client, pwd_hash, info=''):
+        client = DbClient(client, pwd_hash, info)
         session.add(client)
         session.commit()
+
+        return True
 
     def update_client(self, client_id, info=''):
         upd = update(DbClient)
         upd = upd.values({'info': info})
         upd = upd.where(DbClient.id == client_id)
         engine.execute(upd)
+
+    def del_client(self, client_id):
+        session.query(DbClient).filter(DbClient.id == client_id).delete()
+        session.commit()
+
+    def get_register_clients(self):
+        data = []
+        stm = session.query(DbClient.login).all()
+        for row in stm:
+            data.append(row.login)
+        return data
 
     def register_client_online(self, client_id, ip_address, port, info):
         client_online = DbClientsOnline(client_id, ip_address, port, info)
@@ -56,13 +69,6 @@ class ServerStorage:
         for row in result:
             data.append(row)
 
-        return data
-
-    def get_register_clients(self):
-        data = []
-        stm = session.query(DbClient.login).all()
-        for row in stm:
-            data.append(row.login)
         return data
 
     def get_history(self, client_id):

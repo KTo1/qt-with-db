@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Monsterchat server</string>
+   <string>MMMMMonsterchat server</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -26,7 +26,7 @@
        </attribute>
        <layout class="QGridLayout" name="gridLayout_2">
         <item row="0" column="0">
-         <widget class="QTableView" name="table_users_online"/>
+         <widget class="QTableView" name="table_clients_online"/>
         </item>
        </layout>
       </widget>
@@ -36,7 +36,7 @@
        </attribute>
        <layout class="QGridLayout" name="gridLayout_3">
         <item row="0" column="0">
-         <widget class="QTableView" name="table_users_stat"/>
+         <widget class="QTableView" name="table_clients_stat"/>
         </item>
        </layout>
       </widget>
@@ -154,7 +154,7 @@
        <attribute name="title">
         <string>Пользователи</string>
        </attribute>
-       <widget class="QPushButton" name="pushButton_add_user">
+       <widget class="QPushButton" name="pushButton_add_client">
         <property name="geometry">
          <rect>
           <x>230</x>
@@ -167,7 +167,7 @@
          <string>Добавить пользователя</string>
         </property>
        </widget>
-       <widget class="QPushButton" name="pushButton_del_user">
+       <widget class="QPushButton" name="pushButton_del_client">
         <property name="geometry">
          <rect>
           <x>230</x>
@@ -180,7 +180,7 @@
          <string>Удалить пользователя</string>
         </property>
        </widget>
-       <widget class="QComboBox" name="comboBox_users">
+       <widget class="QComboBox" name="comboBox_clients">
         <property name="geometry">
          <rect>
           <x>10</x>
@@ -232,7 +232,7 @@
          <enum>Qt::PlainText</enum>
         </property>
        </widget>
-       <widget class="QLineEdit" name="lineEdit_user_name">
+       <widget class="QLineEdit" name="lineEdit_client_name">
         <property name="geometry">
          <rect>
           <x>70</x>
@@ -242,7 +242,7 @@
          </rect>
         </property>
        </widget>
-       <widget class="QLineEdit" name="lineEdit_pwd">
+       <widget class="QLineEdit" name="lineEdit_pwd1">
         <property name="geometry">
          <rect>
           <x>70</x>

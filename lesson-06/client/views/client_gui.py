@@ -30,7 +30,8 @@ class ClientGui(QMainWindow, FORM_CLASS):
 
         self.setupUi(self)
         self.initUi()
-        self.setWindowTitle(f'Monsterchat client <{self.__client_name}>')
+
+        self.setWindowTitle(f'MMMMMonsterchat client <{self.__client_name}>')
 
         self.update_contacts_list()
 

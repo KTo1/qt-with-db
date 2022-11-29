@@ -53,7 +53,6 @@ class Server(metaclass=ServerVerifier):
         self.__listen_port = listen_port
         self.__storage = ServerStorage()
         self.__config_file_path = config_file_path
-        self.__strange_string = '4c4e86fd-5a13-4c20-93ff-c62ef5153d7c'
 
 # region protocol
 
@@ -240,13 +239,6 @@ class Server(metaclass=ServerVerifier):
     def clear_online(self):
         self.__storage.clear_online()
 
-    def register_client(self, client):
-        client_id = self.__storage.get_client(client)
-        if not client_id:
-            self.__storage.add_client(client, datetime.now())
-        else:
-            self.__storage.update_client(client_id, datetime.now())
-
     def register_client_online(self, client, socket, ip_address, port):
         # TODO закешировать
         client_id = self.__storage.get_client(client)
@@ -337,9 +329,10 @@ class Server(metaclass=ServerVerifier):
                                 send_message(client_socket, response)
                                 client_name = response[MESSAGE][USER][ACCOUNT_NAME]
 
-                                self.register_client(client_name)
-                                self.register_client_online(client_name, client_socket, str(client_address[0]), str(client_address[1]))
-                                self.register_client_action(client_name, 'login', str(client_address))
+                                pass
+                                # self.register_client(client_name)
+                                # self.register_client_online(client_name, client_socket, str(client_address[0]), str(client_address[1]))
+                                # self.register_client_action(client_name, 'login', str(client_address))
 
                             # Пока так, 201 это сообщение
                             if response[RESPONSE] == 201:
