@@ -53,6 +53,7 @@ class Server(metaclass=ServerVerifier):
         self.__listen_port = listen_port
         self.__storage = ServerStorage()
         self.__config_file_path = config_file_path
+        self.__strange_string = '4c4e86fd-5a13-4c20-93ff-c62ef5153d7c'
 
 # region protocol
 

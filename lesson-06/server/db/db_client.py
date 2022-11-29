@@ -7,11 +7,13 @@ class DbClient(Base):
 
     id = Column(Integer, primary_key=True)
     login = Column(String)
+    pwd_hash = Column(String)
     info = Column(String)
 
-    def __init__(self, login, info):
+    def __init__(self, login, pwd_hash, info):
         self.login = login
         self.info = info
+        self.pwd_hash = pwd_hash
 
     def __repr__(self):
-        return f'id: {self.id}, login>: {self.login}, last login: {self.info}'
+        return f'id: {self.id}, login: {self.login}, last login: {self.info}'

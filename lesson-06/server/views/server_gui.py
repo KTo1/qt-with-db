@@ -4,7 +4,7 @@ import configparser
 from PyQt5 import uic
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
-from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtWidgets import QMainWindow, QLineEdit
 
 from db.server_storage import ServerStorage
 
@@ -39,6 +39,9 @@ class ServerGui(QMainWindow, FORM_CLASS):
         self.btn_save.clicked.connect(self.__save_config)
         self.table_users_online.setModel(self.__table_users_online_model)
         self.table_users_stat.setModel(self.__table_users_stat_model)
+
+        self.lineEdit_pwd.setEchoMode(QLineEdit.Password)
+        self.lineEdit_pwd2.setEchoMode(QLineEdit.Password)
 
     def __load_config(self):
         config = configparser.ConfigParser()
