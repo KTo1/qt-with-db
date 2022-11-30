@@ -15,7 +15,7 @@ from PyQt5.QtWidgets import QApplication
 from common.variables import (MAX_CONNECTIONS, RESPONSE, ERROR, TIME, USER, ACTION, ACCOUNT_NAME, PRESENCE,
                               MESSAGE, EXIT, TO_USERNAME, USERNAME_SERVER, USERS_ONLINE, ACTION_GET_CONTACTS,
                               ACTION_ADD_CONTACT, ACTION_DEL_CONTACT, ACTION_GET_CLIENTS, RESPONSE_OK)
-from common.utils import get_message, send_message, parse_cmd_parameter, PortField, result_from_stdout
+from common.utils import get_message, send_message, parse_cmd_parameter, PortField, result_from_stdout, generate_hash
 from common.exceptions import CodeException
 from logs.server_log_config import server_log
 from db.server_storage import ServerStorage
@@ -53,6 +53,7 @@ class Server(metaclass=ServerVerifier):
         self.__listen_port = listen_port
         self.__storage = ServerStorage()
         self.__config_file_path = config_file_path
+        self.__clients_sockets = []
 
 # region protocol
 
@@ -100,14 +101,13 @@ class Server(metaclass=ServerVerifier):
             MESSAGE: ''
         }
 
-    def create_presence_answer(self, response):
+    def create_ok_answer(self):
         """
         Генерирует ответ на приветствие
-        :param response:
         :return:
         """
 
-        message = self.create_common_message(200, response[MESSAGE][USER][ACCOUNT_NAME])
+        message = self.create_common_message(301, USERNAME_SERVER)
         message[MESSAGE] = 'OK'
 
         return message
@@ -121,6 +121,30 @@ class Server(metaclass=ServerVerifier):
 
         message = self.create_common_message(201, USERNAME_SERVER)
         message[MESSAGE] = 'Пользователь не найден, возможно он не в сети, или вы ошиблись в имени.'
+
+        return message
+
+    def create_no_register_client_answer(self):
+        """
+        Генерирует сообщение пользователь не зарегистрирован
+        :param response:
+        :return:
+        """
+
+        message = self.create_common_message(208, USERNAME_SERVER)
+        message[MESSAGE] = 'Пользователь не зарегистрирован.'
+
+        return message
+
+    def create_invalid_pwd_client_answer(self):
+        """
+        Генерирует сообщение пароль не верный
+        :param response:
+        :return:
+        """
+
+        message = self.create_common_message(209, USERNAME_SERVER)
+        message[MESSAGE] = 'Пароль не верный.'
 
         return message
 
@@ -156,7 +180,7 @@ class Server(metaclass=ServerVerifier):
 
         message = self.create_common_message(203, USERNAME_SERVER)
 
-        client_id = self.__storage.get_client(client_name)
+        client_id = self.__storage.get_client_id(client_name)
         contacts = self.__storage.get_contacts(client_id)
 
         message[MESSAGE] = contacts
@@ -212,8 +236,8 @@ class Server(metaclass=ServerVerifier):
 
     def add_client_contact(self, client, contact):
         # TODO закешировать
-        client_id = self.__storage.get_client(client)
-        contact_id = self.__storage.get_client(contact)
+        client_id = self.__storage.get_client_id(client)
+        contact_id = self.__storage.get_client_id(contact)
 
         self.__storage.add_contact(client_id, contact_id)
 
@@ -221,14 +245,14 @@ class Server(metaclass=ServerVerifier):
 
     def del_client_contact(self, client, contact):
         # TODO закешировать
-        client_id = self.__storage.get_client(client)
-        contact_id = self.__storage.get_client(contact)
+        client_id = self.__storage.get_client_id(client)
+        contact_id = self.__storage.get_client_id(contact)
 
         self.__storage.del_contact(client_id, contact_id)
 
     def get_history(self, client):
         # TODO закешировать
-        client_id = self.__storage.get_client(client)
+        client_id = self.__storage.get_client_id(client)
 
         history = self.__storage.get_history(client_id)
         result = 'История: \n'
@@ -241,27 +265,27 @@ class Server(metaclass=ServerVerifier):
 
     def register_client_online(self, client, socket, ip_address, port):
         # TODO закешировать
-        client_id = self.__storage.get_client(client)
+        client_id = self.__storage.get_client_id(client)
 
         self.__clients_online_db[client] = socket
         self.__storage.register_client_online(client_id, ip_address, port, datetime.now())
 
     def update_stat(self, sender, recipient):
         # TODO закешировать
-        sender_id = self.__storage.get_client(sender)
-        recipient_id = self.__storage.get_client(recipient)
+        sender_id = self.__storage.get_client_id(sender)
+        recipient_id = self.__storage.get_client_id(recipient)
 
         self.__storage.update_stat(sender_id, recipient_id)
 
     def register_client_action(self, client, action, info):
         # TODO закешировать
-        client_id = self.__storage.get_client(client)
+        client_id = self.__storage.get_client_id(client)
 
         self.__storage.register_client_action(client_id, action, info)
 
     def unregister_client_online(self, client):
         # TODO закешировать
-        client_id = self.__storage.get_client(client)
+        client_id = self.__storage.get_client_id(client)
 
         self.__storage.unregister_client_online(client_id)
         del self.__clients_online_db[client]
@@ -271,19 +295,35 @@ class Server(metaclass=ServerVerifier):
 
 # endregion
 
-    def __print_help(self):
-        """
-        Выводит справку
-        """
+    def autorize(self, client_name, socket):
 
-        help_string = 'Справка по командам:\n'
-        help_string += '/help - эта справка\n'
-        help_string += '/online - кто онлайн?\n'
-        help_string += '/clients - список пользователей сервера\n'
-        help_string += '/hist client - история работы пользователя client, если пусто то все пользователи\n'
-        help_string += '/stop - остановка сервера\n'
+        client_message = get_message(socket)
 
-        print(help_string)
+        client = self.__storage.get_client(client_name)
+
+        if not client:
+            try:
+                send_message(socket, self.create_no_register_client_answer())
+            except OSError:
+                pass
+
+            time.sleep(1)
+            self.__clients_sockets.remove(socket)
+            socket.close()
+
+        if client:
+            pwd_hash = client_message[MESSAGE].encode('ascii')
+            if not client.pwd_hash == pwd_hash:
+                try:
+                    send_message(socket, self.create_invalid_pwd_client_answer())
+                except OSError:
+                    pass
+
+                time.sleep(1)
+                self.__clients_sockets.remove(socket)
+                socket.close()
+
+        send_message(socket, self.create_ok_answer())
 
     def __process_messages(self):
         """
@@ -300,7 +340,7 @@ class Server(metaclass=ServerVerifier):
 
         self.clear_online()
 
-        clients_sockets = []
+        self.__clients_sockets = []
         server_log.info(f'Сервер запущен по адресу: {self.__listen_address}: {self.__listen_port}')
 
         while True:
@@ -309,30 +349,27 @@ class Server(metaclass=ServerVerifier):
             except OSError as e:
                 pass
             else:
-                clients_sockets.append(client_sock)
+                self.__clients_sockets.append(client_sock)
             finally:
                 wait = 0
                 message_pool = []
 
-                for client_socket in clients_sockets:
+                for client_socket in self.__clients_sockets:
                     # На мой взгляд логичнее это вынести за цикл, но на виндовс так не работает
                     cl_sock_read, cl_sock_write = [], []
-                    cl_sock_read, cl_sock_write, _ = select(clients_sockets, clients_sockets, [], wait)
+                    cl_sock_read, cl_sock_write, _ = select(self.__clients_sockets, self.__clients_sockets, [], wait)
                     try:
                         if client_socket in cl_sock_read:
                             client_message = get_message(client_socket)
-                            print(client_message)
                             response = self.process_client_message(client_message)
 
                             # Пока так, 200 это приветствие
                             if response[RESPONSE] == 200 and client_socket in cl_sock_write:
-                                send_message(client_socket, response)
+                                transport.settimeout(10)
                                 client_name = response[MESSAGE][USER][ACCOUNT_NAME]
-
-                                pass
-                                # self.register_client(client_name)
-                                # self.register_client_online(client_name, client_socket, str(client_address[0]), str(client_address[1]))
-                                # self.register_client_action(client_name, 'login', str(client_address))
+                                send_message(client_socket, response)
+                                self.autorize(client_name, client_socket)
+                                transport.settimeout(1)
 
                             # Пока так, 201 это сообщение
                             if response[RESPONSE] == 201:
@@ -351,7 +388,7 @@ class Server(metaclass=ServerVerifier):
 
                             # Пока так, 202 это выход
                             if response[RESPONSE] == 202 and client_socket in cl_sock_write:
-                                clients_sockets.remove(client_socket)
+                                self.__clients_sockets.remove(client_socket)
                                 client_socket.close()
 
                                 self.register_client_action(response[MESSAGE][USER][ACCOUNT_NAME], 'exit', str(client_address))
@@ -396,16 +433,16 @@ class Server(metaclass=ServerVerifier):
 
                     except ConnectionResetError as e:
                         server_log.exception(f'Произошла ошибка: {str(e)}')
-                        clients_sockets.remove(client_socket)
+                        self.__clients_sockets.remove(client_socket)
                         client_socket.close()
 
                     except (ValueError, json.JSONDecodeError):
                         server_log.exception('Принято некорректное сообщение от клиента')
-                        clients_sockets.remove(client_socket)
+                        self.__clients_sockets.remove(client_socket)
                         client_socket.close()
 
                 for message in message_pool:
-                    _, cl_sock_write, _ = select([], clients_sockets, [], wait)
+                    _, cl_sock_write, _ = select([], self.__clients_sockets, [], wait)
 
                     client_socket = message[0]
                     message_send = message[1]

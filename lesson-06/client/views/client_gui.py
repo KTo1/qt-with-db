@@ -33,7 +33,7 @@ class ClientGui(QMainWindow, FORM_CLASS):
 
         self.setWindowTitle(f'MMMMMonsterchat client <{self.__client_name}>')
 
-        self.update_contacts_list()
+        # self.update_contacts_list()
 
     def initUi(self):
         self.pushButton_add_contact.clicked.connect(self.add_contact_click)
@@ -176,12 +176,27 @@ class ClientGui(QMainWindow, FORM_CLASS):
                 add_contact.setBackground(QBrush(self.__color_red))
                 self.__table_contacts_model.appendRow([add_contact])
 
+    # Слот приёма нового сообщений
+    @pyqtSlot(dict)
+    def server_message(self, info):
+        if info['response'] == 208:
+            self.__messages.information(self, 'Ошибка', info['message'], QMessageBox.Yes)
+            self.close()
+
+        if info['response'] == 209:
+            self.__messages.information(self, 'Ошибка', info['message'], QMessageBox.Yes)
+            self.close()
+
+        if info['response'] == 301:
+            self.update_contacts_list()
+
     # Слот потери соединения
     @pyqtSlot()
     def connection_lost(self):
         self.status_message('Сбой соединения, потеряно соединение с сервером. ')
 
     def make_connection(self, trans_obj):
+        trans_obj.server_message.connect(self.server_message)
         trans_obj.new_message.connect(self.new_message)
         trans_obj.connection_lost.connect(self.connection_lost)
 

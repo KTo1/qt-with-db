@@ -17,9 +17,13 @@ DbStat.metadata.create_all(engine)
 
 class ServerStorage:
 
-    def get_client(self, client_login):
+    def get_client_id(self, client_login):
         data = session.query(DbClient).filter(DbClient.login == client_login).limit(1).first()
         return data.id if data else 0
+
+    def get_client(self, client_login):
+        data = session.query(DbClient).filter(DbClient.login == client_login).limit(1).first()
+        return data
 
     def add_client(self, client, pwd_hash, info=''):
         client = DbClient(client, pwd_hash, info)
@@ -154,19 +158,19 @@ class ServerStorage:
 if __name__ == '__main__':
 
     sto = ServerStorage()
-    if not sto.get_client('kto1'):
+    if not sto.get_client_id('kto1'):
         sto.add_client('kto1', 'cool')
 
-    if not sto.get_client('kto1'):
+    if not sto.get_client_id('kto1'):
         sto.add_client('kto1', 'cool')
 
-    if not sto.get_client('kto'):
+    if not sto.get_client_id('kto'):
         sto.add_client('kto', 'admin')
 
-    client_id1 = sto.get_client('kto1')
+    client_id1 = sto.get_client_id('kto1')
     sto.register_client_online(client_id1, '127.0.0.1', '1111', '')
 
-    client_id2 = sto.get_client('kto')
+    client_id2 = sto.get_client_id('kto')
     sto.register_client_online(client_id2, '127.0.0.1', '1111', '')
 
     sto.unregister_client_online(client_id1)

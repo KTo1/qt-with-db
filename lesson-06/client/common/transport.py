@@ -6,9 +6,10 @@ import threading
 
 from datetime import datetime
 from PyQt5.QtCore import pyqtSignal, QObject
-from .utils import send_message, get_message
+from .utils import send_message, get_message, generate_hash
 from .variables import (TIME, USER, RESPONSE, MESSAGE, ACTION, ACCOUNT_NAME, ACTION_GET_CONTACTS, ACTION_ADD_CONTACT,
-                        TO_USERNAME, ACTION_DEL_CONTACT, USERS_ONLINE, PRESENCE, EXIT, ACTION_GET_CLIENTS, ERROR)
+                        TO_USERNAME, ACTION_DEL_CONTACT, USERS_ONLINE, PRESENCE, EXIT, ACTION_GET_CLIENTS, ERROR,
+                        ACTION_DIGEST)
 from .exceptions import ServerException
 
 
@@ -16,16 +17,19 @@ socket_lock = threading.Lock()
 
 
 class Transport(threading.Thread, QObject):
+    server_message = pyqtSignal(dict)
     new_message = pyqtSignal(str)
     connection_lost = pyqtSignal()
 
-    def __init__(self, server_address, server_port, client_name):
+    def __init__(self, server_address, server_port, client_name, client_pwd):
         threading.Thread.__init__(self)
         QObject.__init__(self)
 
         self.__server_address = server_address
         self.__server_port = server_port
         self.__client_name = client_name
+        self.__client_pwd = client_pwd
+
         self.__storage = None
         self.__logger = None
         self.__transport = None
@@ -54,7 +58,14 @@ class Transport(threading.Thread, QObject):
 
         try:
             answer = self.process_answer(get_message(self.__transport))
-            print(f'{answer[RESPONSE]} : {answer[MESSAGE]}')
+            if answer[RESPONSE] == 200:
+                password_hash = generate_hash(self.__client_name, self.__client_pwd)
+                password_hash = password_hash.decode('ascii')
+                send_message(self.__transport, self.create_digest_message(self.__client_name, password_hash))
+
+                # answer = self.process_answer(get_message(self.__transport))
+            else:
+                raise ServerException('Сервер отклонил запрос.')
 
         except (ValueError, json.JSONDecodeError):
             self.__logger.exception('Не удалось декодировать сообщение сервера.')
@@ -70,6 +81,12 @@ class Transport(threading.Thread, QObject):
                 ACCOUNT_NAME: account_name
             }
         }
+
+        return result
+
+    def create_digest_message(self, account_name, digest):
+        result = self.create_common_message(account_name, ACTION_DIGEST)
+        result[MESSAGE] = digest
 
         return result
 
@@ -149,13 +166,31 @@ class Transport(threading.Thread, QObject):
 
             if answer[RESPONSE] == 200:
                 return answer
+
+            # Not register
+            if answer[RESPONSE] == 208:
+                self.server_message.emit(answer)
+                return answer
+
+            # Invalid pwd
+            if answer[RESPONSE] == 209:
+                self.server_message.emit(answer)
+                return answer
+
+            # connect ok
+            if answer[RESPONSE] == 301:
+                self.server_message.emit(answer)
+                return answer
+
             elif answer[RESPONSE] == 400:
                 raise ServerException(f'{answer[ERROR]}')
+
             elif answer[RESPONSE] == 201:
                 # TODO по хорошему думаю тут стоит использовать время сервера
                 self.__storage.add_message(datetime.now(), answer[USER], self.__client_name, answer[MESSAGE])
                 self.new_message.emit(answer[USER])
                 return answer
+
             else:
                 return answer
 

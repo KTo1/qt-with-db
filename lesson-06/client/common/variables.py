@@ -1,5 +1,7 @@
 """ Константы """
 
+STRANGE_STRING = '4c4e86fd-5a13-4c20-93ff-c62ef5153d7c'
+
 # Порт по умолчанию для сетевого взаимодействия
 DEFAULT_PORT = 8888
 # IP адрес по умолчанию
@@ -17,6 +19,7 @@ TIME = 'time'
 USER = 'user'
 ACCOUNT_NAME = 'account_name'
 
+ACTION_DIGEST = 'digest'
 ACTION_GET_CONTACTS = 'get_contacts'
 ACTION_GET_CLIENTS = 'get_clients'
 ACTION_ADD_CONTACT = 'add_contact'

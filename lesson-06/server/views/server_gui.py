@@ -30,7 +30,6 @@ class ServerGui(QMainWindow, FORM_CLASS):
         self.__storage = ServerStorage()
         self.__config_file_path = config_file_path
         self.__messages = QMessageBox()
-        self.__strange_string = '4c4e86fd-5a13-4c20-93ff-c62ef5153d7c'
 
         self.__load_config()
         self.__load_client_list()
@@ -91,11 +90,11 @@ class ServerGui(QMainWindow, FORM_CLASS):
             self.status_message('Пароли не совпадают.')
             return
 
-        if self.__storage.get_client(client_name):
+        if self.__storage.get_client_id(client_name):
             self.status_message('Такой пользователь уже существует.')
             return
 
-        self.__storage.add_client(client_name, generate_hash(client_name, self.__strange_string, pwd1), datetime.now())
+        self.__storage.add_client(client_name, generate_hash(client_name, pwd1), datetime.now())
 
         self.lineEdit_client_name.setText('')
         self.lineEdit_pwd1.setText('')
@@ -111,7 +110,7 @@ class ServerGui(QMainWindow, FORM_CLASS):
             return
 
         client_name = self.comboBox_clients.currentText()
-        client_id = self.__storage.get_client(client_name)
+        client_id = self.__storage.get_client_id(client_name)
 
         if not client_name:
             self.status_message('Пользователь не найден, возможно он уже удален.')

@@ -1,6 +1,9 @@
 import sys
 import json
-from common.variables import MAX_PACKAGE_LENGTH, ENCODING
+import hashlib
+import binascii
+
+from common.variables import MAX_PACKAGE_LENGTH, ENCODING, STRANGE_STRING
 from logs.decorators import log, Log
 from io import StringIO
 
@@ -20,6 +23,14 @@ class PortField:
 
     def __set_name__(self, owner, my_attr):
         self.my_attr = my_attr
+
+
+def generate_hash(client_name, password):
+    passwd_bytes = password.encode('utf-8')
+    salt = (client_name + STRANGE_STRING).encode('utf-8')
+    password_hash = hashlib.pbkdf2_hmac('sha512', passwd_bytes, salt, 10000)
+
+    return binascii.hexlify(password_hash)
 
 
 def result_from_stdout(func, arg):

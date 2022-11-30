@@ -19,14 +19,15 @@ class Client():
 
     __server_port = PortField()
 
-    def __init__(self, server_address, server_port, client_name):
+    def __init__(self, server_address, server_port, client_name, client_pwd):
         self.__server_address = server_address
         self.__server_port = server_port
         self.__client_name = client_name
+        self.__client_pwd = client_pwd
 
         self.__storage = ClientStorage()
 
-        self.__transport = Transport(server_address, server_port, client_name)
+        self.__transport = Transport(server_address, server_port, client_name, client_pwd)
         self.__transport.set_logger(client_log)
         self.__transport.set_storage(ClientStorage())
 
@@ -87,9 +88,10 @@ if __name__ == '__main__':
         # Если пользователь ввёл имя и нажал ОК, то сохраняем ведённое и удаляем объект, инааче выходим
         if start_dialog.ok_pressed:
             client_name = start_dialog.lineEdit_nickname.text()
+            client_pwd = start_dialog.lineEdit_pwd.text()
             del start_dialog
         else:
             exit(0)
 
-    client = Client(server_address, server_port, client_name)
+    client = Client(server_address, server_port, client_name, client_pwd)
     client.run()
