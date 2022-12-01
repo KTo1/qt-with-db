@@ -17,6 +17,7 @@ from common.variables import (MAX_CONNECTIONS, RESPONSE, ERROR, TIME, USER, ACTI
                               ACTION_ADD_CONTACT, ACTION_DEL_CONTACT, ACTION_GET_CLIENTS, RESPONSE_OK)
 from common.utils import get_message, send_message, parse_cmd_parameter, PortField, result_from_stdout, generate_hash
 from common.exceptions import CodeException
+from common.decorators import login_required
 from logs.server_log_config import server_log
 from db.server_storage import ServerStorage
 from views.server_gui import ServerGui
@@ -325,6 +326,79 @@ class Server(metaclass=ServerVerifier):
 
         send_message(socket, self.create_ok_answer())
 
+    @login_required
+    def __process_clients_messages(self, transport, response, client_address, client_socket, cl_sock_read, cl_sock_write, message_pool):
+
+        # Пока так, 200 это приветствие
+        if response[RESPONSE] == 200 and client_socket in cl_sock_write:
+            transport.settimeout(10)
+            client_name = response[MESSAGE][USER][ACCOUNT_NAME]
+            send_message(client_socket, response)
+            self.autorize(client_name, client_socket)
+            transport.settimeout(1)
+
+            self.register_client_online(client_name, client_socket, client_address[0], client_address[1])
+
+        # Пока так, 201 это сообщение
+        if response[RESPONSE] == 201:
+            client_socket = self.get_socket_on_clientname(response[MESSAGE][TO_USERNAME])
+
+            if client_socket:
+                message_pool.append((client_socket, self.create_answer(response)))
+            else:
+                message_pool.append((client_socket, self.create_no_client_answer()))
+
+            sender_name = response[MESSAGE][USER][ACCOUNT_NAME]
+            recipient_name = response[MESSAGE][TO_USERNAME].replace('/', '')
+
+            self.update_stat(sender_name, recipient_name)
+            self.register_client_action(sender_name, 'send message', recipient_name)
+
+        # Пока так, 202 это выход
+        if response[RESPONSE] == 202 and client_socket in cl_sock_write:
+            self.__clients_sockets.remove(client_socket)
+            client_socket.close()
+
+            self.register_client_action(response[MESSAGE][USER][ACCOUNT_NAME], 'exit', str(client_address))
+            self.unregister_client_online(response[MESSAGE][USER][ACCOUNT_NAME])
+
+        # Пока так, 203 это запрос пользователей онлайн
+        if response[RESPONSE] == 203 and client_socket in cl_sock_write:
+            self.register_client_action(response[MESSAGE][USER][ACCOUNT_NAME], 'get online', str(client_address))
+            message_pool.append((client_socket, self.create_client_online_answer()))
+
+        # Пока так, 204 это запрос списка контактов
+        if response[RESPONSE] == 204 and client_socket in cl_sock_write:
+            client_name = response[MESSAGE][USER][ACCOUNT_NAME]
+            self.register_client_action(client_name, 'get contacts', str(client_address))
+            message_pool.append((client_socket, self.create_client_contacts_answer(client_name)))
+
+        # Пока так, 205 это запрос на добавление в контакты
+        if response[RESPONSE] == 205 and client_socket in cl_sock_write:
+            client_name = response[MESSAGE][USER][ACCOUNT_NAME]
+            contacts_name = response[MESSAGE][TO_USERNAME]
+
+            self.add_client_contact(client_name, contacts_name)
+
+            self.register_client_action(client_name, 'add contact', str(client_address))
+            message_pool.append((client_socket, self.create_add_contact_answer()))
+
+        # Пока так, 206 это запрос на удаление из контактов
+        if response[RESPONSE] == 206 and client_socket in cl_sock_write:
+            client_name = response[MESSAGE][USER][ACCOUNT_NAME]
+            contacts_name = response[MESSAGE][TO_USERNAME]
+
+            self.del_client_contact(client_name, contacts_name)
+
+            self.register_client_action(client_name, 'del contact', str(client_address))
+            message_pool.append((client_socket, self.create_del_contact_answer()))
+
+        # Пока так, 207 это запрос на список клиентов
+        if response[RESPONSE] == 207 and client_socket in cl_sock_write:
+            client_name = response[MESSAGE][USER][ACCOUNT_NAME]
+            self.register_client_action(client_name, 'get clients', str(client_address))
+            message_pool.append((client_socket, self.create_get_clients_answer()))
+
     def __process_messages(self):
         """
         Для потока обработки сообщений
@@ -363,80 +437,14 @@ class Server(metaclass=ServerVerifier):
                             client_message = get_message(client_socket)
                             response = self.process_client_message(client_message)
 
-                            # Пока так, 200 это приветствие
-                            if response[RESPONSE] == 200 and client_socket in cl_sock_write:
-                                transport.settimeout(10)
-                                client_name = response[MESSAGE][USER][ACCOUNT_NAME]
-                                send_message(client_socket, response)
-                                self.autorize(client_name, client_socket)
-                                transport.settimeout(1)
-
-                            # Пока так, 201 это сообщение
-                            if response[RESPONSE] == 201:
-                                client_socket = self.get_socket_on_clientname(response[MESSAGE][TO_USERNAME])
-
-                                if client_socket:
-                                    message_pool.append((client_socket, self.create_answer(response)))
-                                else:
-                                    message_pool.append((client_socket, self.create_no_client_answer()))
-
-                                sender_name = response[MESSAGE][USER][ACCOUNT_NAME]
-                                recipient_name = response[MESSAGE][TO_USERNAME].replace('/', '')
-
-                                self.update_stat(sender_name, recipient_name)
-                                self.register_client_action(sender_name, 'send message', recipient_name)
-
-                            # Пока так, 202 это выход
-                            if response[RESPONSE] == 202 and client_socket in cl_sock_write:
-                                self.__clients_sockets.remove(client_socket)
-                                client_socket.close()
-
-                                self.register_client_action(response[MESSAGE][USER][ACCOUNT_NAME], 'exit', str(client_address))
-                                self.unregister_client_online(response[MESSAGE][USER][ACCOUNT_NAME])
-
-                            # Пока так, 203 это запрос пользователей онлайн
-                            if response[RESPONSE] == 203 and client_socket in cl_sock_write:
-                                self.register_client_action(response[MESSAGE][USER][ACCOUNT_NAME], 'get online', str(client_address))
-                                message_pool.append((client_socket, self.create_client_online_answer()))
-
-                            # Пока так, 204 это запрос списка контактов
-                            if response[RESPONSE] == 204 and client_socket in cl_sock_write:
-                                client_name = response[MESSAGE][USER][ACCOUNT_NAME]
-                                self.register_client_action(client_name, 'get contacts', str(client_address))
-                                message_pool.append((client_socket, self.create_client_contacts_answer(client_name)))
-
-                            # Пока так, 205 это запрос на добавление в контакты
-                            if response[RESPONSE] == 205 and client_socket in cl_sock_write:
-                                client_name = response[MESSAGE][USER][ACCOUNT_NAME]
-                                contacts_name = response[MESSAGE][TO_USERNAME]
-
-                                self.add_client_contact(client_name, contacts_name)
-
-                                self.register_client_action(client_name, 'add contact', str(client_address))
-                                message_pool.append((client_socket, self.create_add_contact_answer()))
-
-                            # Пока так, 206 это запрос на удаление из контактов
-                            if response[RESPONSE] == 206 and client_socket in cl_sock_write:
-                                client_name = response[MESSAGE][USER][ACCOUNT_NAME]
-                                contacts_name = response[MESSAGE][TO_USERNAME]
-
-                                self.del_client_contact(client_name, contacts_name)
-
-                                self.register_client_action(client_name, 'del contact', str(client_address))
-                                message_pool.append((client_socket, self.create_del_contact_answer()))
-
-                            # Пока так, 207 это запрос на список клиентов
-                            if response[RESPONSE] == 207 and client_socket in cl_sock_write:
-                                client_name = response[MESSAGE][USER][ACCOUNT_NAME]
-                                self.register_client_action(client_name, 'get clients', str(client_address))
-                                message_pool.append((client_socket, self.create_get_clients_answer()))
+                            self.__process_clients_messages(transport, response, client_address, client_socket, cl_sock_read, cl_sock_write, message_pool)
 
                     except ConnectionResetError as e:
                         server_log.exception(f'Произошла ошибка: {str(e)}')
                         self.__clients_sockets.remove(client_socket)
                         client_socket.close()
 
-                    except (ValueError, json.JSONDecodeError):
+                    except (ValueError, json.JSONDecodeError, TypeError):
                         server_log.exception('Принято некорректное сообщение от клиента')
                         self.__clients_sockets.remove(client_socket)
                         client_socket.close()
