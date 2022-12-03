@@ -6,7 +6,7 @@ import threading
 
 from datetime import datetime
 from PyQt5.QtCore import pyqtSignal, QObject
-from .utils import send_message, get_message, generate_hash
+from client.common.utils import send_message, get_message, generate_hash
 from .variables import (TIME, USER, RESPONSE, MESSAGE, ACTION, ACCOUNT_NAME, ACTION_GET_CONTACTS, ACTION_ADD_CONTACT,
                         TO_USERNAME, ACTION_DEL_CONTACT, USERS_ONLINE, PRESENCE, EXIT, ACTION_GET_CLIENTS, ERROR,
                         ACTION_DIGEST)

@@ -12,15 +12,15 @@ from select import select
 from datetime import datetime
 from PyQt5.QtWidgets import QApplication
 
-from common.variables import (MAX_CONNECTIONS, RESPONSE, ERROR, TIME, USER, ACTION, ACCOUNT_NAME, PRESENCE,
-                              MESSAGE, EXIT, TO_USERNAME, USERNAME_SERVER, USERS_ONLINE, ACTION_GET_CONTACTS,
-                              ACTION_ADD_CONTACT, ACTION_DEL_CONTACT, ACTION_GET_CLIENTS, RESPONSE_OK)
-from common.utils import get_message, send_message, parse_cmd_parameter, PortField, result_from_stdout, generate_hash
-from common.exceptions import CodeException
-from common.decorators import login_required
-from logs.server_log_config import server_log
-from db.server_storage import ServerStorage
-from views.server_gui import ServerGui
+from server_app.common.variables import (MAX_CONNECTIONS, RESPONSE, ERROR, TIME, USER, ACTION, ACCOUNT_NAME, PRESENCE,
+                                         MESSAGE, EXIT, TO_USERNAME, USERNAME_SERVER, USERS_ONLINE, ACTION_GET_CONTACTS,
+                                         ACTION_ADD_CONTACT, ACTION_DEL_CONTACT, ACTION_GET_CLIENTS, RESPONSE_OK)
+from server_app.common.utils import get_message, send_message, parse_cmd_parameter, PortField, result_from_stdout, generate_hash
+from server_app.common.exceptions import CodeException
+from server_app.common.decorators import login_required
+from server_app.logs.server_log_config import server_log
+from server_app.db.server_storage import ServerStorage
+from server_app.views.server_gui import ServerGui
 
 
 class ServerVerifier(type):
