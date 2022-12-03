@@ -3,13 +3,13 @@ import time
 
 from PyQt5.QtWidgets import QApplication
 
-from common.variables import (DEFAULT_PORT, DEFAULT_IP_ADDRESS)
-from common.utils import parse_cmd_parameter, PortField
-from common.transport import Transport
-from logs.client_log_config import client_log
-from db.client_storage import ClientStorage
-from views.nickname import NicknameForm
-from views.client_gui import ClientGui
+from client_app.common.variables import (DEFAULT_PORT, DEFAULT_IP_ADDRESS)
+from client_app.common.utils import parse_cmd_parameter, PortField
+from client_app.common.transport import Transport
+from client_app.logs.client_log_config import client_log
+from client_app.db.client_storage import ClientStorage
+from client_app.views.nickname import NicknameForm
+from client_app.views.client_gui import ClientGui
 
 
 class Client():

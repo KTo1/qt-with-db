@@ -4,6 +4,7 @@ from db_connect import Base
 
 class DbMessages(Base):
     __tablename__ = 'messages'
+    __table_args__ = {'extend_existing': True}
 
     id = Column(Integer, primary_key=True)
     date_action = Column(DateTime)
