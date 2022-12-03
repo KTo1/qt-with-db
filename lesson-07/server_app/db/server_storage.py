@@ -1,11 +1,12 @@
 from sqlalchemy import update, select, and_
 from datetime import datetime
-from db_connect import session, engine
-from db_client import DbClient
-from db_history import DbHistory
-from db_clients_online import DbClientsOnline
-from db_contacts import DbContacts
-from db_stat import DbStat
+
+from server_app.db.db_connect import session, engine
+from server_app.db.db_client import DbClient
+from server_app.db.db_history import DbHistory
+from server_app.db.db_clients_online import DbClientsOnline
+from server_app.db.db_contacts import DbContacts
+from server_app.db.db_stat import DbStat
 
 
 DbClient.metadata.create_all(engine)

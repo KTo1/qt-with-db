@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
-from db_connect import Base
+from server_app.db.db_connect import Base
 
 
 class DbContacts(Base):

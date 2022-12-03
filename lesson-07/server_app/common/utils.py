@@ -1,14 +1,20 @@
+""" Общие процедуры и фукнции """
+
 import sys
 import json
 import hashlib
 import binascii
 
-from common.variables import MAX_PACKAGE_LENGTH, ENCODING, STRANGE_STRING
-from logs.decorators import log, Log
 from io import StringIO
+
+from server_app.common.variables import MAX_PACKAGE_LENGTH, ENCODING, STRANGE_STRING
+from server_app.logs.decorators import log, Log
 
 
 class PortField:
+    """
+    Дескриптор для портов
+    """
 
     def __get__(self, instance, owner):
         return instance.__dict__[self.my_attr]
@@ -26,6 +32,10 @@ class PortField:
 
 
 def generate_hash(client_name, password):
+    """
+    Генерирует хэш
+    """
+
     passwd_bytes = password.encode('utf-8')
     salt = (client_name + STRANGE_STRING).encode('utf-8')
     password_hash = hashlib.pbkdf2_hmac('sha512', passwd_bytes, salt, 10000)
@@ -34,6 +44,10 @@ def generate_hash(client_name, password):
 
 
 def result_from_stdout(func, arg):
+    """
+    Перенаправляет поток вывода функции в переменную
+    """
+
     old_stdout = sys.stdout
     result = StringIO()
     sys.stdout = result
@@ -46,6 +60,11 @@ def result_from_stdout(func, arg):
 
 @Log()
 def parse_cmd_parameter(parameter, sys_argv, default_value, error_message):
+    """
+    Извлекает параметр из командной строки, если он не задан, возвращает default_value, в случае неудачи
+    возвращает error_message
+    """
+
     try:
         if not isinstance(sys_argv, list):
             raise TypeError

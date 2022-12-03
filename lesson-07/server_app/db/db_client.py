@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String
-from db_connect import Base
+from server_app.db.db_connect import Base
 
 
 class DbClient(Base):

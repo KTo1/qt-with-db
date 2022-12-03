@@ -5,6 +5,20 @@
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
+import os
+import sys
+
+
+path = os.path.dirname(os.path.dirname(os.path.abspath('.')))
+sys.path.insert(0, os.path.dirname(path))
+sys.path.insert(1, path)
+sys.path.insert(1, os.path.join(path, 'logs'))
+sys.path.insert(1, os.path.join(path, 'common'))
+sys.path.insert(1, os.path.join(path, 'db'))
+sys.path.insert(1, os.path.join(path, 'view'))
+
+print(sys.path)
+
 
 project = 'MMMonsterChat server'
 copyright = '2022, kto'

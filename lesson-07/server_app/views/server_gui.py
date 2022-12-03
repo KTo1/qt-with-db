@@ -7,8 +7,8 @@ from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PyQt5.QtWidgets import QMainWindow, QLineEdit, QMessageBox
 from datetime import datetime
 
-from db.server_storage import ServerStorage
-from common.utils import generate_hash
+from server_app.db.server_storage import ServerStorage
+from server_app.common.utils import generate_hash
 
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'server_gui.ui'))
