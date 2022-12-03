@@ -4,6 +4,7 @@ from server_app.db.db_connect import Base
 
 class DbClientsOnline(Base):
     __tablename__ = 'clients_online'
+    __table_args__ = {'extend_existing': True}
 
     id = Column(Integer, primary_key=True)
     client_id = Column(Integer, ForeignKey('clients.id', ondelete='CASCADE'))

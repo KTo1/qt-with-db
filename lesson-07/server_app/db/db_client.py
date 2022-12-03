@@ -4,6 +4,7 @@ from server_app.db.db_connect import Base
 
 class DbClient(Base):
     __tablename__ = 'clients'
+    __table_args__ = {'extend_existing': True}
 
     id = Column(Integer, primary_key=True)
     login = Column(String)

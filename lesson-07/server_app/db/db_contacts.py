@@ -4,6 +4,7 @@ from server_app.db.db_connect import Base
 
 class DbContacts(Base):
     __tablename__ = 'contacts'
+    __table_args__ = {'extend_existing': True}
 
     id = Column(Integer, primary_key=True)
     client_id = Column(Integer, ForeignKey('clients.id', ondelete='CASCADE'))

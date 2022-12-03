@@ -4,6 +4,7 @@ from server_app.db.db_connect import Base
 
 class DbHistory(Base):
     __tablename__ = 'history'
+    __table_args__ = {'extend_existing': True}
 
     id = Column(Integer, primary_key=True)
     client_id = Column(Integer, ForeignKey('clients.id', ondelete='CASCADE'))
