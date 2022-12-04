@@ -159,6 +159,7 @@ class ClientGui(QMainWindow, FORM_CLASS):
             self.status_message('Ошибка, потеряно соединение с сервером!')
         else:
             self.update_history(self.__chat_with)
+            self.textEdit_message.toPlainText()
 
     # Слот приёма нового сообщений
     @pyqtSlot(str)

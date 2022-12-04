@@ -1,0 +1,353 @@
+
+<!DOCTYPE html>
+
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>client_app.common package &#8212; документация MMMMonsterChat client 1</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/translations.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="genindex.html" />
+    <link rel="search" title="Поиск" href="search.html" />
+    <link rel="next" title="client_app.db package" href="db.html" />
+    <link rel="prev" title="client_app" href="modules.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="client-app-common-package">
+<h1>client_app.common package<a class="headerlink" href="#client-app-common-package" title="Permalink to this heading">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">¶</a></h2>
+</section>
+<section id="module-common.exceptions">
+<span id="client-app-common-exceptions-module"></span><h2>client_app.common.exceptions module<a class="headerlink" href="#module-common.exceptions" title="Permalink to this heading">¶</a></h2>
+<dl class="py exception">
+<dt class="sig sig-object py" id="common.exceptions.CodeException">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">common.exceptions.</span></span><span class="sig-name descname"><span class="pre">CodeException</span></span><a class="headerlink" href="#common.exceptions.CodeException" title="Ссылка на это определение">¶</a></dt>
+<dd><p>Базовые классы: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseException</span></code></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="common.exceptions.ServerException">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">common.exceptions.</span></span><span class="sig-name descname"><span class="pre">ServerException</span></span><a class="headerlink" href="#common.exceptions.ServerException" title="Ссылка на это определение">¶</a></dt>
+<dd><p>Базовые классы: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseException</span></code></p>
+</dd></dl>
+
+</section>
+<section id="module-common.transport">
+<span id="client-app-common-transport-module"></span><h2>client_app.common.transport module<a class="headerlink" href="#module-common.transport" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="common.transport.Transport">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">common.transport.</span></span><span class="sig-name descname"><span class="pre">Transport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">server_address</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server_port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_pwd</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#common.transport.Transport" title="Ссылка на это определение">¶</a></dt>
+<dd><p>Базовые классы: <code class="xref py py-class docutils literal notranslate"><span class="pre">Thread</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="common.transport.Transport.add_contact">
+<span class="sig-name descname"><span class="pre">add_contact</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">contact_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#common.transport.Transport.add_contact" title="Ссылка на это определение">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="common.transport.Transport.connect">
+<span class="sig-name descname"><span class="pre">connect</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#common.transport.Transport.connect" title="Ссылка на это определение">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="common.transport.Transport.connection_lost">
+<span class="sig-name descname"><span class="pre">connection_lost</span></span><a class="headerlink" href="#common.transport.Transport.connection_lost" title="Ссылка на это определение">¶</a></dt>
+<dd><p>pyqtSignal(<a href="#id1"><span class="problematic" id="id2">*</span></a>types, name: str = …, revision: int = …, arguments: Sequence = …) -&gt; PYQT_SIGNAL</p>
+<p>types is normally a sequence of individual types.  Each type is either a
+type object or a string that is the name of a C++ type.  Alternatively
+each type could itself be a sequence of types each describing a different
+overloaded signal.
+name is the optional C++ name of the signal.  If it is not specified then
+the name of the class attribute that is bound to the signal is used.
+revision is the optional revision of the signal that is exported to QML.
+If it is not specified then 0 is used.
+arguments is the optional sequence of the names of the signal’s arguments.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="common.transport.Transport.create_add_contacts_message">
+<span class="sig-name descname"><span class="pre">create_add_contacts_message</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">account_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contact_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#common.transport.Transport.create_add_contacts_message" title="Ссылка на это определение">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="common.transport.Transport.create_clients_request">
+<span class="sig-name descname"><span class="pre">create_clients_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">account_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#common.transport.Transport.create_clients_request" title="Ссылка на это определение">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="common.transport.Transport.create_common_message">
+<span class="sig-name descname"><span class="pre">create_common_message</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">account_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#common.transport.Transport.create_common_message" title="Ссылка на это определение">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="common.transport.Transport.create_contacts_request">
+<span class="sig-name descname"><span class="pre">create_contacts_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">account_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#common.transport.Transport.create_contacts_request" title="Ссылка на это определение">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="common.transport.Transport.create_del_contacts_message">
+<span class="sig-name descname"><span class="pre">create_del_contacts_message</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">account_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contact_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#common.transport.Transport.create_del_contacts_message" title="Ссылка на это определение">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="common.transport.Transport.create_digest_message">
+<span class="sig-name descname"><span class="pre">create_digest_message</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">account_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">digest</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#common.transport.Transport.create_digest_message" title="Ссылка на это определение">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="common.transport.Transport.create_exit_message">
+<span class="sig-name descname"><span class="pre">create_exit_message</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">account_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#common.transport.Transport.create_exit_message" title="Ссылка на это определение">¶</a></dt>
+<dd><p>Функция генерирует запрос о выходе клиента
+:param account_name:
+:return:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="common.transport.Transport.create_message">
+<span class="sig-name descname"><span class="pre">create_message</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">account_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_clientname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#common.transport.Transport.create_message" title="Ссылка на это определение">¶</a></dt>
+<dd><p>Функция генерирует запрос о сообщении клиента
+:param message:
+:param account_name:
+:param to_clientname:
+:return:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="common.transport.Transport.create_online_request">
+<span class="sig-name descname"><span class="pre">create_online_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">account_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#common.transport.Transport.create_online_request" title="Ссылка на это определение">¶</a></dt>
+<dd><p>Функция генерирует запрос о пользователях онлайн
+:param account_name:
+:return:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="common.transport.Transport.create_presence">
+<span class="sig-name descname"><span class="pre">create_presence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">account_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#common.transport.Transport.create_presence" title="Ссылка на это определение">¶</a></dt>
+<dd><p>Функция генерирует запрос о присутствии клиента
+:param account_name:
+:return:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="common.transport.Transport.del_contact">
+<span class="sig-name descname"><span class="pre">del_contact</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">contact_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#common.transport.Transport.del_contact" title="Ссылка на это определение">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="common.transport.Transport.get_clients_list">
+<span class="sig-name descname"><span class="pre">get_clients_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#common.transport.Transport.get_clients_list" title="Ссылка на это определение">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="common.transport.Transport.get_contacts_list">
+<span class="sig-name descname"><span class="pre">get_contacts_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#common.transport.Transport.get_contacts_list" title="Ссылка на это определение">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="common.transport.Transport.new_message">
+<span class="sig-name descname"><span class="pre">new_message</span></span><a class="headerlink" href="#common.transport.Transport.new_message" title="Ссылка на это определение">¶</a></dt>
+<dd><p>pyqtSignal(<a href="#id3"><span class="problematic" id="id4">*</span></a>types, name: str = …, revision: int = …, arguments: Sequence = …) -&gt; PYQT_SIGNAL</p>
+<p>types is normally a sequence of individual types.  Each type is either a
+type object or a string that is the name of a C++ type.  Alternatively
+each type could itself be a sequence of types each describing a different
+overloaded signal.
+name is the optional C++ name of the signal.  If it is not specified then
+the name of the class attribute that is bound to the signal is used.
+revision is the optional revision of the signal that is exported to QML.
+If it is not specified then 0 is used.
+arguments is the optional sequence of the names of the signal’s arguments.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="common.transport.Transport.process_answer">
+<span class="sig-name descname"><span class="pre">process_answer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">answer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#common.transport.Transport.process_answer" title="Ссылка на это определение">¶</a></dt>
+<dd><p>Функция разбирает ответ сервера
+:param answer:
+:return:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="common.transport.Transport.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#common.transport.Transport.run" title="Ссылка на это определение">¶</a></dt>
+<dd><p>Method representing the thread’s activity.</p>
+<p>You may override this method in a subclass. The standard run() method
+invokes the callable object passed to the object’s constructor as the
+target argument, if any, with sequential and keyword arguments taken
+from the args and kwargs arguments, respectively.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="common.transport.Transport.send_message">
+<span class="sig-name descname"><span class="pre">send_message</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">account_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_clientname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#common.transport.Transport.send_message" title="Ссылка на это определение">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="common.transport.Transport.server_message">
+<span class="sig-name descname"><span class="pre">server_message</span></span><a class="headerlink" href="#common.transport.Transport.server_message" title="Ссылка на это определение">¶</a></dt>
+<dd><p>pyqtSignal(<a href="#id5"><span class="problematic" id="id6">*</span></a>types, name: str = …, revision: int = …, arguments: Sequence = …) -&gt; PYQT_SIGNAL</p>
+<p>types is normally a sequence of individual types.  Each type is either a
+type object or a string that is the name of a C++ type.  Alternatively
+each type could itself be a sequence of types each describing a different
+overloaded signal.
+name is the optional C++ name of the signal.  If it is not specified then
+the name of the class attribute that is bound to the signal is used.
+revision is the optional revision of the signal that is exported to QML.
+If it is not specified then 0 is used.
+arguments is the optional sequence of the names of the signal’s arguments.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="common.transport.Transport.set_logger">
+<span class="sig-name descname"><span class="pre">set_logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#common.transport.Transport.set_logger" title="Ссылка на это определение">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="common.transport.Transport.set_storage">
+<span class="sig-name descname"><span class="pre">set_storage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">storage</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#common.transport.Transport.set_storage" title="Ссылка на это определение">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="common.transport.Transport.shutdown">
+<span class="sig-name descname"><span class="pre">shutdown</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#common.transport.Transport.shutdown" title="Ссылка на это определение">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-client_app.common.utils">
+<span id="client-app-common-utils-module"></span><h2>client_app.common.utils module<a class="headerlink" href="#module-client_app.common.utils" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="client_app.common.utils.PortField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">client_app.common.utils.</span></span><span class="sig-name descname"><span class="pre">PortField</span></span><a class="headerlink" href="#client_app.common.utils.PortField" title="Ссылка на это определение">¶</a></dt>
+<dd><p>Базовые классы: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="client_app.common.utils.generate_hash">
+<span class="sig-prename descclassname"><span class="pre">client_app.common.utils.</span></span><span class="sig-name descname"><span class="pre">generate_hash</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">password</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#client_app.common.utils.generate_hash" title="Ссылка на это определение">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="client_app.common.utils.result_from_stdout">
+<span class="sig-prename descclassname"><span class="pre">client_app.common.utils.</span></span><span class="sig-name descname"><span class="pre">result_from_stdout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#client_app.common.utils.result_from_stdout" title="Ссылка на это определение">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-common.variables">
+<span id="client-app-common-variables-module"></span><h2>client_app.common.variables module<a class="headerlink" href="#module-common.variables" title="Permalink to this heading">¶</a></h2>
+<p>Константы</p>
+</section>
+<section id="module-common.verifiers">
+<span id="client-app-common-verifiers-module"></span><h2>client_app.common.verifiers module<a class="headerlink" href="#module-common.verifiers" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="common.verifiers.ClientVerifier">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">common.verifiers.</span></span><span class="sig-name descname"><span class="pre">ClientVerifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#common.verifiers.ClientVerifier" title="Ссылка на это определение">¶</a></dt>
+<dd><p>Базовые классы: <code class="xref py py-class docutils literal notranslate"><span class="pre">type</span></code></p>
+</dd></dl>
+
+</section>
+<section id="module-common">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-common" title="Permalink to this heading">¶</a></h2>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">MMMMonsterChat client</a></h1>
+
+
+
+
+
+
+
+
+<h3>Навигация</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">client_app</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">client_app.common package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db.html">client_app.db package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logs.html">client_app.logs package</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">client_app</a><ul>
+      <li>Previous: <a href="modules.html" title="предыдущая глава">client_app</a></li>
+      <li>Next: <a href="db.html" title="следующая глава">client_app.db package</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Быстрый поиск</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Искать" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, KTo.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.3.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/common.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
