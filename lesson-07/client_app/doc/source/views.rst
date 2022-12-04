@@ -7,7 +7,7 @@ Submodules
 client\_app.views.add\_contact module
 -------------------------------------
 
-.. automodule:: client_app.views.add_contact
+.. automodule:: views.add_contact
    :members:
    :undoc-members:
    :show-inheritance:
@@ -15,7 +15,7 @@ client\_app.views.add\_contact module
 client\_app.views.client\_gui module
 ------------------------------------
 
-.. automodule:: client_app.views.client_gui
+.. automodule:: views.client_gui
    :members:
    :undoc-members:
    :show-inheritance:
@@ -23,7 +23,7 @@ client\_app.views.client\_gui module
 client\_app.views.nickname module
 ---------------------------------
 
-.. automodule:: client_app.views.nickname
+.. automodule:: views.nickname
    :members:
    :undoc-members:
    :show-inheritance:
@@ -31,7 +31,7 @@ client\_app.views.nickname module
 Module contents
 ---------------
 
-.. automodule:: client_app.views
+.. automodule:: views
    :members:
    :undoc-members:
    :show-inheritance:

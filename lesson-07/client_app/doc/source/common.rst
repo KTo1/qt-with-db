@@ -7,7 +7,7 @@ Submodules
 client\_app.common.exceptions module
 ------------------------------------
 
-.. automodule:: client_app.common.exceptions
+.. automodule:: common.exceptions
    :members:
    :undoc-members:
    :show-inheritance:
@@ -15,7 +15,7 @@ client\_app.common.exceptions module
 client\_app.common.transport module
 -----------------------------------
 
-.. automodule:: client_app.common.transport
+.. automodule:: common.transport
    :members:
    :undoc-members:
    :show-inheritance:
@@ -31,7 +31,7 @@ client\_app.common.utils module
 client\_app.common.variables module
 -----------------------------------
 
-.. automodule:: client_app.common.variables
+.. automodule:: common.variables
    :members:
    :undoc-members:
    :show-inheritance:
@@ -39,7 +39,7 @@ client\_app.common.variables module
 client\_app.common.verifiers module
 -----------------------------------
 
-.. automodule:: client_app.common.verifiers
+.. automodule:: common.verifiers
    :members:
    :undoc-members:
    :show-inheritance:
@@ -47,7 +47,7 @@ client\_app.common.verifiers module
 Module contents
 ---------------
 
-.. automodule:: client_app.common
+.. automodule:: common
    :members:
    :undoc-members:
    :show-inheritance:

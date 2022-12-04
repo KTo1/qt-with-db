@@ -7,7 +7,7 @@ Submodules
 client\_app.db.client\_storage module
 -------------------------------------
 
-.. automodule:: client_app.db.client_storage
+.. automodule:: db.client_storage
    :members:
    :undoc-members:
    :show-inheritance:
@@ -15,7 +15,7 @@ client\_app.db.client\_storage module
 client\_app.db.db\_connect module
 ---------------------------------
 
-.. automodule:: client_app.db.db_connect
+.. automodule:: db.db_connect
    :members:
    :undoc-members:
    :show-inheritance:
@@ -23,7 +23,7 @@ client\_app.db.db\_connect module
 client\_app.db.db\_messages module
 ----------------------------------
 
-.. automodule:: client_app.db.db_messages
+.. automodule:: db.db_messages
    :members:
    :undoc-members:
    :show-inheritance:
@@ -31,7 +31,7 @@ client\_app.db.db\_messages module
 Module contents
 ---------------
 
-.. automodule:: client_app.db
+.. automodule:: db
    :members:
    :undoc-members:
    :show-inheritance:
