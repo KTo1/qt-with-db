@@ -12,7 +12,7 @@ def login_required(func):
 
     def checker(*args, **kwargs):
         if func.__name__ == '__process_clients_messages':
-            from variables import MESSAGE, ACTION, USER, ACCOUNT_NAME
+            from server_app.common.variables import MESSAGE, ACTION, USER, ACCOUNT_NAME
             register_clients = args[0]._Server__clients_online_db
             client_name = args[2][MESSAGE][USER][ACCOUNT_NAME]
             action = args[2][MESSAGE][ACTION]
