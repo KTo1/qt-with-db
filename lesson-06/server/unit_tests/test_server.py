@@ -4,7 +4,7 @@ import unittest
 
 sys.path.append(os.path.join(os.getcwd(), '..'))
 
-from server import process_client_message
+from server_app import process_client_message
 from common.variables import TIME, ACTION, PRESENCE, USER, ACCOUNT_NAME, RESPONSE, ERROR
 
 
