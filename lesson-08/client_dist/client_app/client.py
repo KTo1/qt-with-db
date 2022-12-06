@@ -91,7 +91,7 @@ if __name__ == '__main__':
             client_pwd = start_dialog.lineEdit_pwd.text()
             del start_dialog
         else:
-            exit(0)
+            sys.exit(0)
 
     client = Client(server_address, server_port, client_name, client_pwd)
     client.run()
