@@ -1,5 +1,4 @@
 import sys
-import time
 
 from PyQt5.QtWidgets import QApplication
 
@@ -55,9 +54,6 @@ class Client():
 
         self.process_gui()
 
-        time.sleep(2)
-
-        self.__transport.shutdown()
         self.__transport.join()
 
 

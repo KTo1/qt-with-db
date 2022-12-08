@@ -140,11 +140,7 @@
             </property>
             <layout class="QGridLayout" name="gridLayout_3">
              <item row="0" column="0">
-              <widget class="QTextEdit" name="textEdit_message">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-              </widget>
+              <widget class="QPlainTextEdit" name="textEdit_message"/>
              </item>
             </layout>
            </widget>
