@@ -43,6 +43,7 @@ class Transport(threading.Thread, QObject):
         self.__storage = storage
 
     def shutdown(self):
+        send_message(self.__transport, self.create_exit_message(self.__client_name))
         self.__logger.info('Отключение.')
 
     def connect(self):

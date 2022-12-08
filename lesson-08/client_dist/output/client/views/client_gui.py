@@ -1,4 +1,5 @@
 import os
+import time
 
 from PyQt5 import uic
 from PyQt5.QtCore import pyqtSlot, Qt
@@ -202,4 +203,6 @@ class ClientGui(QMainWindow, FORM_CLASS):
         trans_obj.connection_lost.connect(self.connection_lost)
 
     def closeEvent(self, event):
+        self.__transport.shutdown()
+        time.sleep(2)
         event.accept()

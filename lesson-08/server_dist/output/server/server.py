@@ -484,16 +484,18 @@ class Server(metaclass=ServerVerifier):
         process_gui = threading.Thread(target=self.__process_gui, daemon=True)
 
         process_messages.daemon = True
-        process_gui.daemon = True
+        # process_gui.daemon = True
 
         process_messages.start()
-        process_gui.start()
+        # process_gui.start()
+        self.__process_gui()
 
-        while True:
-            time.sleep(1)
-            if process_messages.is_alive() and process_gui.is_alive():
-                continue
-            break
+        process_messages.join()
+        # while True:
+        #     time.sleep(1)
+        #     if process_messages.is_alive() and process_gui.is_alive():
+        #         continue
+        #     break
 
 
 if __name__ == '__main__':
